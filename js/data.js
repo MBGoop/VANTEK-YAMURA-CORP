@@ -10,7 +10,8 @@ const DATA_FILES = {
   gamif    : 'data/gamification.json',
   formats  : 'data/formats.json',
   bench    : 'data/benchmark.json',
-  types    : 'data/session-types.json'
+  types    : 'data/session-types.json',
+  plan     : 'data/plan.json'
 };
 
 /* Mini CSV-parser: puntkomma-gescheiden (Excel NL), respecteert "quotes". */
@@ -71,6 +72,7 @@ async function loadData(){
   window.FORMATS       = D.formats.FORMATS;
   window.BENCHMARK     = D.bench.BENCHMARK;
   window.ALL_TYPES     = D.types.ALL_TYPES;
+  window.PLAN          = D.plan;            /* vast Hyrox-schema */
 
-  console.log(`[GRIT] data geladen — ${Object.keys(window.EX).length} oefeningen`);
+  console.log(`[GRIT] data geladen — ${Object.keys(window.EX).length} oefeningen, plan ${window.PLAN?.weeks?.length||0} weken`);
 }

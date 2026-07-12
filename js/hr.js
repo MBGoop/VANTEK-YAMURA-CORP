@@ -96,6 +96,23 @@ function vVitals(v){
    </div>
 
    <div class="card">
+     <div class="lbl">HYROX-PLAN</div>
+     ${S.hyroxStart ? (()=>{
+        const wk = hyroxWeek();
+        return wk
+          ? `<p>Actief — <b>week ${wk} van 20</b>.</p>
+             <p class="tiny dim">Gestart op ${S.hyroxStart}. Je agenda volgt nu het vaste schema.</p>
+             <div class="row"><button id="planstop" class="ghost">PLAN STOPZETTEN</button></div>`
+          : `<p>Plan afgelopen (voorbij week 20).</p>
+             <p class="tiny dim">De app genereert je sessies weer zelf.</p>
+             <div class="row"><button id="planstop" class="ghost">RESETTEN</button></div>`;
+      })() : `<p>Niet gestart.</p>
+             <p class="tiny dim">20 weken, 4 dagen/week. Het plan overschrijft de
+             gegenereerde sessies; buiten het plan valt de app terug op zichzelf.</p>
+             <div class="row"><button id="planstart">PLAN STARTEN VANDAAG</button></div>`}
+   </div>
+
+   <div class="card">
      <div class="lbl">ZONES (maxHR ${h.maxHR})</div>
      ${hrZones().map(z=>`<p><b>${z.z}</b> ${z.lo}–${z.hi} bpm — ${z.lab}</p>`).join('')}
      <div class="row"><button id="hrmax">MAXHR AANPASSEN</button></div>
@@ -111,6 +128,17 @@ function vVitals(v){
 
   $('#hrlog').onclick = hrSheet;
   $('#hrmax').onclick = hrMaxSheet;
+  const bStart = $('#planstart'), bStop = $('#planstop');
+  if(bStart) bStart.onclick = () => {
+    startHyroxPlan();
+    toast('HYROX-PLAN GESTART — WEEK 1');
+    render('vit');
+  };
+  if(bStop) bStop.onclick = () => {
+    if(confirm('Plan stopzetten? De app genereert je sessies dan weer zelf.')){
+      stopHyroxPlan(); render('vit');
+    }
+  };
   drawHRChart();
 }
 

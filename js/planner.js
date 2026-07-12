@@ -123,8 +123,34 @@ function weekForDate(ds){
   return (Math.floor(d/7)%4)+1;
 }
 function planWeek(){return weekForDate(todayStr())}
-/* basis-sessie uit het gegenereerde plan (zonder overrides) */
+/* --- VAST PLAN (data/plan.json) ---------------------------------------
+   Het plan is de blauwdruk: staat er voor deze dag een sessie in, dan wint die.
+   Staat er niets (dag buiten het plan, of plan uitgeschakeld), dan valt de app
+   terug op zijn eigen generator. Zo blijft alles werken zoals vroeger. */
+function planStartDate(){ return S.hyroxStart || null; }
+
+function planEntry(ds){
+  if(!S.hyroxStart) return null;
+  if(typeof PLAN === 'undefined' || !PLAN || !PLAN.weeks) return null;
+  const d = Math.floor((new Date(ds) - new Date(S.hyroxStart)) / DAY);
+  if(d < 0) return null;
+  const W = PLAN.weeks[Math.floor(d/7)];        // week 1 = index 0
+  if(!W) return null;                           // voorbij week 20 -> generator
+  const s = W.sessions.find(x => x.dow === new Date(ds).getDay());
+  if(!s) return null;
+  return {week:W.week, block:W.block, focus:W.focus,
+          type:s.type, titel:s.titel, detail:s.detail, hr:s.hr};
+}
+/* week 1..20 van het Hyrox-plan (null = niet in het plan) */
+function hyroxWeek(ds){ const p = planEntry(ds||todayStr()); return p ? p.week : null; }
+/* plan starten vanaf vandaag */
+function startHyroxPlan(){ S.hyroxStart = todayStr(); save(); }
+function stopHyroxPlan(){ S.hyroxStart = null; save(); }
+
+/* basis-sessie: eerst het plan, dan het gegenereerde schema */
 function basePlanSession(ds){
+  const pe = planEntry(ds);
+  if(pe) return {type:pe.type, idx:0, plan:pe};
   if(!S.plan)return null;
   const dow=new Date(ds).getDay();
   const idx=S.plan.slots.indexOf(dow);
@@ -147,7 +173,9 @@ function sessionForDate(ds){
   if(ov.movedTo)return null; /* deze dag is weg-verplaatst */
   const base=basePlanSession(ds);
   if(!base&&!ov.type)return null;
-  return {type:ov.type||base.type, idx:base?base.idx:0};
+  /* plan-info meegeven, tenzij de gebruiker het dagtype zelf overschreef */
+  return {type:ov.type||base.type, idx:base?base.idx:0,
+          plan:(!ov.type && base) ? base.plan : null};
 }
 /* taper: als er een race is, in de laatste 10 dagen volume afbouwen */
 function taperFactor(ds){

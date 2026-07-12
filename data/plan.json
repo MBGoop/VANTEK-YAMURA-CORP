@@ -1,0 +1,715 @@
+{
+ "meta": {
+  "titel": "Hyrox — 20 weken",
+  "dagen": 4,
+  "race": "december 2026",
+  "kernregel": "80% van je loopvolume rustig, 20% echt hard. Niets ertussenin.",
+  "blokken": [
+   "Basis (wk 1-8)",
+   "Specifiek (wk 9-16)",
+   "Simulatie + taper (wk 17-20)"
+  ]
+ },
+ "weeks": [
+  {
+   "week": 1,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "35 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "6x 2min hard / 2min wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "6 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 2,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "35 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "6x 2min hard / 2min wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "7 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 3,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "40 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "7x 2min hard / 2min wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "8 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 4,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen (herstelweek)",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "30 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "Herstelweek: 5x 1min hard / 2min wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "6 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 5,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "40 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "7x 2min hard / 2min wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "9 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 6,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "45 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "8x 2min hard / 2min wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "10 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 7,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "45 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "8x 2min hard / 90s wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "11 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 8,
+   "block": "Basis",
+   "focus": "Aeroob fundament — traag leren lopen (herstelweek)",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "35 min op praattempo. Wandelpauzes mogen: liever 5min lopen / 1min wandelen dan te hard.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Sled push 4x20m zwaar · sled pull 4x20m · farmers carry 4x50m · wall balls 4x15 · sandbag lunges 3x20m. Volledige rust tussen sets — geen metcon.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "conditioning",
+     "titel": "Interval",
+     "detail": "5x 3min hard / 2min wandelen. Warming-up 10min + cooldown 10min.",
+     "hr": "Z4/Z5 in de blokken"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "8 km volledig op praattempo. Afstand telt, tempo niet.",
+     "hr": "< 145 bpm"
+    }
+   ]
+  },
+  {
+   "week": 9,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "40 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "3 rondes: 1km lopen + 50 wall balls. Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "12 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 10,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "45 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "3 rondes: 1km lopen + 100m sandbag lunges. Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "13 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 11,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "45 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "4 rondes: 1km lopen + afwisselend sled push / wall balls. Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "14 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 12,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen (herstelweek)",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "35 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "Herstelweek: 2 rondes 1km lopen + 30 wall balls. Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "10 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 13,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "45 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "4 rondes: 1km lopen + sled push 25m + sled pull 25m. Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "14 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 14,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "50 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "4 rondes: 1km lopen + wisselend station (ski-erg 500m / burpee broad jumps 40m / farmers carry 200m). Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "15 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 15,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "50 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "5 rondes: 1km lopen + station naar keuze. Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "16 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 16,
+   "block": "Specifiek",
+   "focus": "Compromised running — lopen met verzuurde benen (herstelweek)",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "40 min praattempo. Dit blijft je herstelmotor.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarder worden op sled en sandbag. Focus op grip (farmers carry) en benen (lunges). Volledig uitrusten tussen sets.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "Herstelweek: 3 rondes 1km lopen + licht station. Dit vervangt je interval.",
+     "hr": "hoog — mag pijn doen"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "12 km rustig. Laatste 2km mag iets vlotter.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 17,
+   "block": "Simulatie",
+   "focus": "Eerste halve Hyrox",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "45 min praattempo.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — licht",
+     "detail": "Techniek op racegewicht. Niet uitputten.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "mobility",
+     "titel": "Actief herstel",
+     "detail": "30 min wandelen of los fietsen + mobiliteit.",
+     "hr": "laag"
+    },
+    {
+     "dow": 0,
+     "type": "circuit",
+     "titel": "HALVE HYROX",
+     "detail": "4x (1km lopen + station): ski-erg 500m / sled push / burpee broad jumps / roeien 500m. Klok mee.",
+     "hr": "race-intensiteit"
+    }
+   ]
+  },
+  {
+   "week": 18,
+   "block": "Simulatie",
+   "focus": "Volume vasthouden",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "50 min praattempo.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — stations",
+     "detail": "Zwaarste krachtdag van het blok.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "circuit",
+     "titel": "Compromised running",
+     "detail": "5 rondes: 1km lopen + station.",
+     "hr": "hoog"
+    },
+    {
+     "dow": 0,
+     "type": "conditioning",
+     "titel": "Lange duurloop",
+     "detail": "14 km rustig.",
+     "hr": "< 150 bpm"
+    }
+   ]
+  },
+  {
+   "week": 19,
+   "block": "Simulatie",
+   "focus": "Tweede halve Hyrox — meet je progressie",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Rustige duurloop",
+     "detail": "40 min praattempo.",
+     "hr": "< 145 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "strength",
+     "titel": "Kracht — licht",
+     "detail": "Alles op racegewicht. Geen PR's zoeken.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 5,
+     "type": "mobility",
+     "titel": "Actief herstel",
+     "detail": "30 min los + mobiliteit.",
+     "hr": "laag"
+    },
+    {
+     "dow": 0,
+     "type": "circuit",
+     "titel": "HALVE HYROX #2",
+     "detail": "Zelfde als week 17. Vergelijk je tijd — hier zie je wat 19 weken hebben opgeleverd.",
+     "hr": "race-intensiteit"
+    }
+   ]
+  },
+  {
+   "week": 20,
+   "block": "Taper",
+   "focus": "RACEWEEK — minder is meer",
+   "sessions": [
+    {
+     "dow": 1,
+     "type": "conditioning",
+     "titel": "Kort en los",
+     "detail": "25 min heel rustig.",
+     "hr": "< 140 bpm"
+    },
+    {
+     "dow": 3,
+     "type": "conditioning",
+     "titel": "Activatie",
+     "detail": "15 min inlopen + 4x 30 sec vlot. Niet uitputten.",
+     "hr": "kort hoog"
+    },
+    {
+     "dow": 5,
+     "type": "mobility",
+     "titel": "Rust",
+     "detail": "Volledige rust. Eten en slapen is je training.",
+     "hr": "n.v.t."
+    },
+    {
+     "dow": 0,
+     "type": "circuit",
+     "titel": "HYROX RACE",
+     "detail": "Start bewust TE traag. Je wint op de stations, niet op de eerste kilometer.",
+     "hr": "all-in"
+    }
+   ]
+  }
+ ]
+}

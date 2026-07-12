@@ -300,10 +300,18 @@ function vToday(el){
     const lightNote=mode==='light'?`<div class="warnbox">HERSTELMODUS: sessie automatisch verlicht. Luisteren naar je lijf = winnen.</div>`:'';
     const taperNote=tap?`<div class="warnbox">TAPER ACTIEF: wedstrijd nadert, volume bewust afgebouwd zodat je fris aan de start staat.</div>`:'';
     const deloadNote=week===4?`<div class="warnbox">DELOAD-WEEK: dit is bewust lichter (minder sets). Je lijf herstelt en groeit juist in deze week — geen fout, wel de bedoeling.</div>`:'';
+    /* plan-kaart: wat zegt het vaste Hyrox-schema over vandaag? */
+    const pl=ses.plan;
+    const planNote=pl?`<div class="panel" style="border-color:var(--g3)">
+      <div class="lbl">HYROX WK ${pl.week}/20 — ${pl.block.toUpperCase()}</div>
+      <p><b>${pl.titel}</b></p>
+      <p class="tiny">${pl.detail}</p>
+      <p class="tiny dim">Hartslag: ${pl.hr} &nbsp;·&nbsp; ${pl.focus}</p>
+    </div>`:'';
     const note=S.notes[todayStr()];
     body=`<div class="panel">
       <div class="row"><h2 style="margin:0">${dayLabel(ses.type)}</h2><div class="spacer"></div>${ses.moved?'<span class="tiny dim">[VERPLAATST] </span>':''}<span class="tiny dim">WK ${week}${week===4?' DELOAD':''}</span></div>
-      ${lightNote}${taperNote}${deloadNote}
+      ${planNote}${lightNote}${taperNote}${deloadNote}
       ${renderBlock('WARM-UP',w.warm)}
       ${renderBlock('MAIN SET',w.main,true)}
       ${renderBlock('FINISHER',w.fin)}
