@@ -1,5 +1,6 @@
 import { JSDOM } from 'jsdom'; import fs from 'fs'; import path from 'path';
-const ROOT = '/home/claude/gritv4';
+import { fileURLToPath } from 'url';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dom=new JSDOM(`<!DOCTYPE html><html><body><div id="app"></div></body></html>`,{runScripts:'dangerously',pretendToBeVisual:true,url:'https://x.test/'});
 const w=dom.window,d=w.document;
 w.fetch=async u=>{const t=fs.readFileSync(path.join(ROOT,String(u)),'utf8');return{ok:true,status:200,text:async()=>t,json:async()=>JSON.parse(t)}};

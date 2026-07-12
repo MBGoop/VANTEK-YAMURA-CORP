@@ -203,6 +203,9 @@ function render(tab){
   const hud=$('#hud');
   if(hud){hud.onclick=hudSheet;hud.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')hudSheet()}}
   if(S.lastCheckin===todayStr())maybeReview();   /* zondag: weekrapport */
+  /* Zorg dat de scene-animatie altijd draait als we teruggaan naar MON;
+     voor andere tabs was die eerder stopgezet. mountScene is idempotent. */
+  if(TAB==='mon')mountScene();
 }
 /* De HUD-afkortingen waren onverklaard — nieuwe gebruikers gokten. */
 function hudSheet(){
