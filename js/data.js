@@ -10,8 +10,7 @@ const DATA_FILES = {
   gamif    : 'data/gamification.json',
   formats  : 'data/formats.json',
   bench    : 'data/benchmark.json',
-  types    : 'data/session-types.json',
-  plan     : 'data/plan.json'
+  types    : 'data/session-types.json'
 };
 
 /* Mini CSV-parser: puntkomma-gescheiden (Excel NL), respecteert "quotes". */
@@ -51,14 +50,16 @@ function rowsToEX(rows){
 }
 
 async function loadData(){
-  const [csv, ...jsons] = await Promise.all([
+  const [csv, planCsv, ...jsons] = await Promise.all([
     fetch('data/exercises.csv').then(r=>{if(!r.ok)throw new Error('exercises.csv');return r.text()}),
+    fetch('data/plan.csv').then(r=>{if(!r.ok)throw new Error('plan.csv');return r.text()}),
     ...Object.values(DATA_FILES).map(u=>fetch(u).then(r=>{if(!r.ok)throw new Error(u);return r.json()}))
   ]);
   const keys = Object.keys(DATA_FILES);
   const D = {}; keys.forEach((k,i)=>D[k]=jsons[i]);
 
   window.EX            = rowsToEX(parseCSV(csv));
+  window.PLAN          = rowsToPLAN(parseCSV(planCsv));
   window.DEFAULT       = D.defaults;
   window.PALETTES      = D.creature.PALETTES;
   window.VARIANT_NAMES = D.creature.VARIANT_NAMES;
@@ -68,11 +69,36 @@ async function loadData(){
   window.DAYTYPES      = D.daytypes.DAYTYPES;
   window.CATS          = D.daytypes.CATS;
   window.QUESTS        = D.gamif.QUESTS;
-  window.BADGES        = D.gamif.BADGES;
   window.FORMATS       = D.formats.FORMATS;
   window.BENCHMARK     = D.bench.BENCHMARK;
   window.ALL_TYPES     = D.types.ALL_TYPES;
-  window.PLAN          = D.plan;            /* vast Hyrox-schema */
 
-  console.log(`[GRIT] data geladen — ${Object.keys(window.EX).length} oefeningen, plan ${window.PLAN?.weeks?.length||0} weken`);
+  mergeCustomEx();     /* eigen oefeningen van de gebruiker erbovenop */
+  console.log(`[GRIT] ${Object.keys(window.EX).length} oefeningen · plan ${PLAN.weeks.length} weken`);
+}
+
+/* plan.csv -> {weeks:[{week,block,focus,sessions:[...]}]}
+   Zo kan je je 20 weken in Excel bijsturen, net als de oefeningen. */
+function rowsToPLAN(rows){
+  const byWeek = new Map();
+  rows.forEach(r=>{
+    const n = parseInt(r.week,10);
+    if(!byWeek.has(n)) byWeek.set(n,{week:n, block:r.block, focus:r.focus, sessions:[]});
+    byWeek.get(n).sessions.push({
+      dow:parseInt(r.dow,10), type:r.type, titel:r.titel, detail:r.detail, hr:r.hr
+    });
+  });
+  return { weeks:[...byWeek.values()].sort((a,b)=>a.week-b.week) };
+}
+
+/* Eigen oefeningen (S.customEx) worden over de CSV heen gelegd.
+   Zo kan iemand zonder Excel toch oefeningen toevoegen — en blijft de CSV
+   de 'officiele' bron die je in de repo bijhoudt. */
+function mergeCustomEx(){
+  try{
+    const raw = localStorage.getItem('grit2');
+    if(!raw) return;
+    const st = JSON.parse(raw);
+    if(st && st.customEx) Object.assign(window.EX, st.customEx);
+  }catch(e){}
 }

@@ -24,7 +24,20 @@ function flash(color){const el=$('#engineCard');if(!el)return;el.style.transitio
 
 /* --- engine state --- */
 const ENG={raf:null,running:false,paused:false,start:0,elapsed:0,lastWhole:-1,cfg:null,phase:null,round:0,onFinish:null};
-function stopEngine(){if(ENG.raf)cancelAnimationFrame(ENG.raf);ENG.raf=null;ENG.running=false;ENG.paused=false}
+/* Screen Wake Lock: je scherm mag niet in slaap vallen tijdens een AMRAP.
+   Werkt in Chrome op Android. Kleine moeite, grootste ergernis weg. */
+let WAKE=null;
+async function wakeOn(){
+  try{ if('wakeLock' in navigator && !WAKE) WAKE = await navigator.wakeLock.request('screen'); }
+  catch(e){ /* geweigerd of niet ondersteund — timer werkt gewoon door */ }
+}
+function wakeOff(){ try{ WAKE && WAKE.release(); }catch(e){} WAKE=null; }
+/* Terug uit de achtergrond? Lock opnieuw aanvragen, anders is hij weg. */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && ENG.running) wakeOn();
+});
+
+function stopEngine(){if(ENG.raf)cancelAnimationFrame(ENG.raf);ENG.raf=null;ENG.running=false;ENG.paused=false;wakeOff()}
 
 
 /* subtab TIMER */
@@ -82,6 +95,7 @@ function readCfg(f){
 }
 /* de eigenlijke runner: full-screen overlay met grote klok */
 function startEngine(fmt,cfg,opts={}){
+  wakeOn();
   ENG.cfg={fmt,...cfg};ENG.running=true;ENG.paused=false;ENG.elapsed=0;ENG.lastWhole=-1;ENG.round=0;ENG.phase='work';
   ENG.onFinish=opts.onFinish||null;
   ENG.total = fmt==='amrap'?cfg.dur : fmt==='emom'?cfg.mins*60 : fmt==='hiit'?(cfg.work+cfg.rest)*cfg.rounds : (cfg.cap||0);

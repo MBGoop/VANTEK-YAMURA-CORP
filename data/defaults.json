@@ -36,7 +36,7 @@
  "exLog": {},
  "bw": [],
  "overrides": {},
- "race": null,
+ "race": {},
  "cues": true,
  "fontScale": 1,
  "comfort": false,
@@ -49,5 +49,9 @@
   "restLog": [],
   "baseline": null
  },
- "hyroxStart": null
+ "hyroxStart": null,
+ "anim": "auto",
+ "customEx": {},
+ "lastReview": null,
+ "hyroxPR": {}
 }

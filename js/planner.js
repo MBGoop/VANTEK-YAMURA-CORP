@@ -216,6 +216,20 @@ function bumpStreakIfNew(){
 function todaysQuest(){const d=new Date(todayStr());return QUESTS[(d.getDate()+d.getMonth())%QUESTS.length]}
 
 /* ---------------- BADGES / MIJLPALEN ---------------- */
+/* BADGES bevatten predicaat-functies (b.test) en horen dus in code, niet in JSON:
+   JSON.stringify gooit functies stilzwijgend weg. Alleen QUESTS staat in data. */
+const BADGES=[
+  {id:'first',   name:'EERSTE CONTACT',  desc:'Je eerste sessie gelogd',            test:()=>S.history.length>=1},
+  {id:'ten',     name:'TIEN MISSIES',     desc:'10 sessies voltooid',                test:()=>S.history.length>=10},
+  {id:'streak7', name:'ZEVEN OP EEN RIJ', desc:'Streak van 7 bereikt',               test:()=>S.streak>=7},
+  {id:'cycle',   name:'CYCLUS VOLTOOID',  desc:'Een volledige 4-weken cyclus door',  test:()=>S.planStart&&Math.floor((new Date(todayStr())-new Date(S.planStart))/DAY)>=28},
+  {id:'bench',   name:'NULMETING',        desc:'Eerste benchmark neergezet',         test:()=>S.hyroxPRs.length>=1},
+  {id:'pr',      name:'RECORDBREKER',     desc:'Een benchmark-PR verbeterd',         test:()=>S.hyroxPRs.length>=2&&S.hyroxPRs[S.hyroxPRs.length-1].sec<Math.min(...S.hyroxPRs.slice(0,-1).map(p=>p.sec))},
+  {id:'iron',    name:'IJZEREN WIL',      desc:'25 sessies voltooid',                test:()=>S.history.length>=25},
+  {id:'evolve',  name:'MUTATIE',          desc:'Specimen naar fase 2 gegroeid',      test:()=>stage()>=2},
+  {id:'apex',    name:'APEX SPECIMEN',    desc:'Specimen naar fase 3 gegroeid',      test:()=>stage()>=3},
+];
+
 function checkBadges(){
   BADGES.forEach(b=>{
     if(!S.badges.includes(b.id)&&b.test()){

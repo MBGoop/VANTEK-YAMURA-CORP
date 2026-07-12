@@ -24,52 +24,5 @@
    "t": "3x8 push-ups (regressie mag) + 20 squats",
    "xp": 15
   }
- ],
- "BADGES": [
-  {
-   "id": "first",
-   "name": "EERSTE CONTACT",
-   "desc": "Je eerste sessie gelogd"
-  },
-  {
-   "id": "ten",
-   "name": "TIEN MISSIES",
-   "desc": "10 sessies voltooid"
-  },
-  {
-   "id": "streak7",
-   "name": "ZEVEN OP EEN RIJ",
-   "desc": "Streak van 7 bereikt"
-  },
-  {
-   "id": "cycle",
-   "name": "CYCLUS VOLTOOID",
-   "desc": "Een volledige 4-weken cyclus door"
-  },
-  {
-   "id": "bench",
-   "name": "NULMETING",
-   "desc": "Eerste benchmark neergezet"
-  },
-  {
-   "id": "pr",
-   "name": "RECORDBREKER",
-   "desc": "Een benchmark-PR verbeterd"
-  },
-  {
-   "id": "iron",
-   "name": "IJZEREN WIL",
-   "desc": "25 sessies voltooid"
-  },
-  {
-   "id": "evolve",
-   "name": "MUTATIE",
-   "desc": "Specimen naar fase 2 gegroeid"
-  },
-  {
-   "id": "apex",
-   "name": "APEX SPECIMEN",
-   "desc": "Specimen naar fase 3 gegroeid"
-  }
  ]
 }

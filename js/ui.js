@@ -171,14 +171,55 @@ function render(tab){
    </div>
    <div id="view" style="padding-top:10px"></div>
    <nav id="mainnav">
-     ${[['mon','MONITOR'],['trn','TRAINING'],['agd','AGENDA'],['vit','VITALS'],['bib','OEFENBIB'],['crp','CORP']].map(([id,t])=>`<button data-t="${id}" class="${TAB===id?'active':''}"><canvas class="nic" data-i="${id}"></canvas>${t}</button>`).join('')}
+     ${[['mon','MONITOR'],['trn','TRAINING'],['vit','VITALS'],['bib','OEFENBIB'],['crp','CORP']].map(([id,t])=>`<button data-t="${id}" class="${TAB===id?'active':''}"><canvas class="nic" data-i="${id}"></canvas>${t}</button>`).join('')}
    </nav>`;
   document.querySelectorAll('#mainnav button').forEach(b=>{
     drawNavIcon(b.querySelector('.nic'),b.dataset.t,b.classList.contains('active'));
     b.onclick=()=>render(b.dataset.t);
   });
-  ({mon:vMonitor,trn:vTrain,agd:vAgenda,vit:vVitals,bib:vBib,crp:vCorp})[TAB]($('#view'));
+  /* 'agd' bestaat niet meer als eigen tab: doorverwijzen naar TRAINING > AGENDA */
+  if(TAB==='agd'){ TAB='trn'; TRNSUB='agenda'; }
+  ({mon:vMonitor,trn:vTrain,vit:vVitals,bib:vBib,crp:vCorp})[TAB]($('#view'));
   if(S.lastCheckin!==todayStr())setTimeout(checkinSheet,400);
+  else maybeReview();          /* zondag: weekrapport */
+}
+/* Weekstrip bovenaan: 7 dagen in één oogopslag, tikbaar voor detail. */
+function weekStrip(){
+  const dows=['MA','DI','WO','DO','VR','ZA','ZO'];
+  const base=new Date(todayStr());
+  const mon=new Date(base); mon.setDate(base.getDate()-((base.getDay()+6)%7));
+  let out='';
+  for(let i=0;i<7;i++){
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const ds=d.toISOString().slice(0,10);
+    const ses=sessionForDate(ds), done=S.done[ds];
+    const mk=ses?({strength:'KR',strengthL:'KR',strengthU:'KR',conditioning:'LP',conditioning2:'LP',mixed:'MX',circuit:'HX',mobility:'MO'})[ses.type]:'·';
+    out+=`<div class="wd ${ds===todayStr()?'today':''} ${done?'done':''} ${ses?'':'rest'}">
+      <div class="dw">${dows[i]}</div><div class="st">${done?'OK':mk}</div></div>`;
+  }
+  return `<div class="wstrip" id="wstrip">${out}</div>`;
+}
+function weekSheet(){
+  const ws=weekSummary();
+  const dows=['ZO','MA','DI','WO','DO','VR','ZA'];
+  const base=new Date(todayStr());
+  const mon=new Date(base); mon.setDate(base.getDate()-((base.getDay()+6)%7));
+  let rows='';
+  for(let i=0;i<7;i++){
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const ds=d.toISOString().slice(0,10);
+    const ses=sessionForDate(ds), done=S.done[ds];
+    rows+=`<div class="split ${ds===todayStr()?'run':''}">
+      <span>${dows[d.getDay()]} ${ds.slice(8)}/${ds.slice(5,7)}</span>
+      <span>${done?'[OK] ':''}${ses?(ses.plan?ses.plan.titel:dayLabel(ses.type)):'rust'}</span></div>`;
+  }
+  const o=sheet(`<h2 style="font-size:10px">DEZE WEEK</h2>
+    <p class="tiny dim">Sessies: ${ws.done}/${ws.planned}${ws.avgRpe?` · gem. RPE ${ws.avgRpe}`:''}${ws.prThisWeek?' · PR!':''}</p>
+    <div style="margin-top:12px">${rows}</div>
+    <button class="btn" style="margin-top:16px" id="ws-ag">OPEN AGENDA</button>
+    <button class="btn small ghost" style="margin-top:8px" id="ws-rv">WEEKRAPPORT NU</button>`);
+  o.querySelector('#ws-ag').onclick=()=>{o.remove();TRNSUB='agenda';render('trn')};
+  o.querySelector('#ws-rv').onclick=()=>{o.remove();reviewSheet(true)};
 }
 function consistency(){
   let planned=0,doneN=0;
@@ -206,6 +247,7 @@ function vMonitor(el){
   const lvlPrev=40*Math.pow(level()-1,2);
   const xpPct=Math.min(100,(S.xp-lvlPrev)/(xpForNext()-lvlPrev)*100);
   el.innerHTML=`
+   ${weekStrip()}
    <div id="sceneWrap">
      <canvas id="scene"></canvas>
      <div class="lvlbar"><span class="tiny">L${level()}</span><div class="bar"><div class="fill" style="width:${xpPct}%"></div></div><span class="tiny">${VARIANT_NAMES[S.creature.variant]}</span></div>
@@ -213,7 +255,14 @@ function vMonitor(el){
    </div>
    <div class="speech">${speech()}</div>
    <div class="panel">
-     <div class="row"><h2 style="margin:0">DAGPROTOCOL</h2><div class="spacer"></div><span class="badge ${mode==='light'?'light':''}">${mode==='light'?'LIGHT':mode==='push'?'PUSH':'NORMAAL'}</span></div>
+     <h2>SPECIMEN-STATS</h2>
+     ${meter('POWER',statPct('power'))}
+     ${meter('SPEED',statPct('speed'))}
+     ${meter('GRIT',statPct('grit'))}
+     ${meter('MOBILITY',statPct('mobility'))}
+   </div>
+   <div class="panel">
+     <div class="row"><h2 style="margin:0">TRAININGSPROTOCOL</h2><div class="spacer"></div><span class="badge ${mode==='light'?'light':''}">${mode==='light'?'LIGHT':mode==='push'?'PUSH':'NORMAAL'}</span></div>
      ${ses?(done?`<p class="tiny" style="margin-top:8px">[OK] ${dayLabel(ses.type)} voltooid. Data verwerkt.</p>`
        :`<p class="tiny" style="margin-top:8px">${dayLabel(ses.type)} — ${S.dur} MIN — WEEK ${planWeek()}${planWeek()===4?' [DELOAD]':''}</p><button class="btn" style="margin-top:10px" id="gotrain">START PROTOCOL</button>`)
        :`<p class="tiny" style="margin-top:8px">RUSTDAG. Streak loopt door.</p>`}
@@ -226,18 +275,6 @@ function vMonitor(el){
      ${qDone?`<p class="tiny dim" style="margin-top:6px">[OK] uitgevoerd</p>`:`<button class="btn ghost" style="margin-top:10px" id="qbtn">MELD UITGEVOERD</button>`}
    </div>
    ${raceBanner()}
-   <div class="panel">
-     <h2>SPECIMEN-STATS</h2>
-     ${meter('POWER',statPct('power'))}
-     ${meter('SPEED',statPct('speed'))}
-     ${meter('GRIT',statPct('grit'))}
-     ${meter('MOBILITY',statPct('mobility'))}
-   </div>
-   ${(()=>{const ws=weekSummary();return `<div class="panel inv">
-     <h2>DEZE WEEK</h2>
-     <p>Sessies: <b style="color:var(--g3b)">${ws.done}/${ws.planned}</b>${ws.avgRpe?` &nbsp;·&nbsp; gem. RPE: <b style="color:var(--g3b)">${ws.avgRpe}</b>`:''}${ws.prThisWeek?' &nbsp;·&nbsp; 🏆 PR!':''}</p>
-     ${ws.done>=ws.planned&&ws.planned>0?'<p class="dim">Alle geplande sessies gedaan. Sterk werk.</p>':ws.done>0?'<p class="dim">Goed bezig — hou het ritme vast.</p>':'<p class="dim">Nog een lege week. Eerste sessie zet de toon.</p>'}
-   </div>`})()}
    ${S.badges.length?`<div class="panel">
      <h2>BADGES (${S.badges.length}/${BADGES.length})</h2>
      <div class="chips">${S.badges.slice(-6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?`<span class="chip sel" style="font-size:7px">🏅 ${b.name}</span>`:''}).join('')}</div>
@@ -245,6 +282,7 @@ function vMonitor(el){
    </div>`:''}
    ${TEST?testPanel():''}`;
   mountScene();
+  const wstr=$('#wstrip'); if(wstr) wstr.onclick=weekSheet;
   const g=$('#gotrain');if(g)g.onclick=()=>{TRNSUB='vandaag';render('trn')};
   const xl=$('#extlog');if(xl)xl.onclick=externalLogSheet;
   const ab=$('#allbadges');if(ab)ab.onclick=badgeSheet;
@@ -272,14 +310,18 @@ function vTrain(el){
   el.innerHTML=`
    <div class="subtabs">
      <button id="st-v" class="${TRNSUB==='vandaag'?'on':''}">VANDAAG</button>
+     <button id="st-a" class="${TRNSUB==='agenda'?'on':''}">AGENDA</button>
      <button id="st-t" class="${TRNSUB==='timer'?'on':''}">TIMER</button>
-     <button id="st-b" class="${TRNSUB==='bench'?'on':''}">BENCHMARK</button>
+     <button id="st-b" class="${TRNSUB==='bench'?'on':''}">BENCH</button>
+     <button id="st-r" class="${TRNSUB==='race'?'on':''}">RACE</button>
    </div>
    <div id="trnbody"></div>`;
   $('#st-v').onclick=()=>{TRNSUB='vandaag';render('trn')};
+  $('#st-a').onclick=()=>{TRNSUB='agenda';render('trn')};
   $('#st-t').onclick=()=>{TRNSUB='timer';render('trn')};
   $('#st-b').onclick=()=>{TRNSUB='bench';render('trn')};
-  ({vandaag:vToday,timer:vTimer,bench:vBench})[TRNSUB]($('#trnbody'));
+  $('#st-r').onclick=()=>{TRNSUB='race';render('trn')};
+  ({vandaag:vToday,agenda:vAgenda,timer:vTimer,bench:vBench,race:vRace})[TRNSUB]($('#trnbody'));
 }
 function vToday(el){
   const week=planWeek();
@@ -346,13 +388,23 @@ function bindAlt(el){
     toast('ALTERNATIEF GELADEN — rustig opbouwen');
   });
 }
+/* De reden dat mensen een trainingsapp openen: wat deed ik vorige keer?
+   Progressive overload werkt alleen als je het vorige getal ziet staan. */
 function exHint(key){
-  const e=EX[key];
   const parts=[];
   const sug=suggestKB(key);
   const last=lastLog(key);
-  if(last)parts.push(`VORIGE: ${last.w}KG x ${last.r}`);
-  else if(sug)parts.push(`TIP: ${sug}KG`);
+  const hist=(S.exLog[key]||[]).slice(-3);
+  if(last){
+    parts.push(`VORIGE: ${last.w}KG${last.r?` x ${last.r}`:''}`);
+    if(hist.length>=2){
+      const d=hist[hist.length-1].w-hist[0].w;
+      if(d>0)parts.push(`<span class="up">+${d}KG in ${hist.length} sessies</span>`);
+      else if(d===0&&hist.length>=3)parts.push(`<span class="up">3x zelfde — tijd om te verzwaren</span>`);
+    }
+    const tip=progressTip(key);
+    if(tip)parts.push(tip);
+  } else if(sug) parts.push(`TIP: START OP ${sug}KG`);
   return parts.length?`<span class="hint">${parts.join(' · ')}</span>`:'';
 }
 function renderBlock(title,items,withHints=false){

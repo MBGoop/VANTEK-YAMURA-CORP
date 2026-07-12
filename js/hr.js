@@ -84,7 +84,7 @@ function vVitals(v){
      <div style="font-size:22px;color:${st.kleur};margin:6px 0">${st.kop}${st.delta!==undefined?` (${st.delta>0?'+':''}${st.delta})`:''}</div>
      <p>${st.advies}</p>
      <div class="row">
-       <button id="hrlog">${t?`METING: ${t} BPM — AANPASSEN`:'OCHTENDMETING INVOEREN'}</button>
+       <button class="btn" id="hrlog">${t?`METING: ${t} BPM — AANPASSEN`:'OCHTENDMETING INVOEREN'}</button>
      </div>
    </div>
 
@@ -102,20 +102,20 @@ function vVitals(v){
         return wk
           ? `<p>Actief — <b>week ${wk} van 20</b>.</p>
              <p class="tiny dim">Gestart op ${S.hyroxStart}. Je agenda volgt nu het vaste schema.</p>
-             <div class="row"><button id="planstop" class="ghost">PLAN STOPZETTEN</button></div>`
+             <div class="row"><button class="btn small ghost" id="planstop">PLAN STOPZETTEN</button></div>`
           : `<p>Plan afgelopen (voorbij week 20).</p>
              <p class="tiny dim">De app genereert je sessies weer zelf.</p>
-             <div class="row"><button id="planstop" class="ghost">RESETTEN</button></div>`;
+             <div class="row"><button class="btn small ghost" id="planstop">RESETTEN</button></div>`;
       })() : `<p>Niet gestart.</p>
              <p class="tiny dim">20 weken, 4 dagen/week. Het plan overschrijft de
              gegenereerde sessies; buiten het plan valt de app terug op zichzelf.</p>
-             <div class="row"><button id="planstart">PLAN STARTEN VANDAAG</button></div>`}
+             <div class="row"><button class="btn" id="planstart">PLAN STARTEN VANDAAG</button></div>`}
    </div>
 
    <div class="card">
      <div class="lbl">ZONES (maxHR ${h.maxHR})</div>
      ${hrZones().map(z=>`<p><b>${z.z}</b> ${z.lo}–${z.hi} bpm — ${z.lab}</p>`).join('')}
-     <div class="row"><button id="hrmax">MAXHR AANPASSEN</button></div>
+     <div class="row"><button class="btn small ghost" id="hrmax">MAXHR AANPASSEN</button></div>
    </div>
 
    <div class="card">
@@ -149,8 +149,8 @@ function hrSheet(){
     <p class="dim">Rusthartslag, gemeten vlak na het wakker worden.</p>
     <input id="hrv" type="number" inputmode="numeric" min="30" max="140" value="${cur}" placeholder="bpm">
     <div class="row">
-      <button id="hrok">OPSLAAN</button>
-      <button id="hrx" class="ghost">ANNULEER</button>
+      <button class="btn" id="hrok">OPSLAAN</button>
+      <button class="btn small ghost" id="hrx">ANNULEER</button>
     </div>`);
   const inp = o.querySelector('#hrv'); inp.focus();
   o.querySelector('#hrx').onclick = () => o.remove();
@@ -173,8 +173,8 @@ function hrMaxSheet(){
     kleurt elke training vals rood. Vuistregel: hoogste waarde die je ooit zag, +3.</p>
     <input id="mx" type="number" inputmode="numeric" min="140" max="220" value="${hrState().maxHR}">
     <div class="row">
-      <button id="mxok">OPSLAAN</button>
-      <button id="mxx" class="ghost">ANNULEER</button>
+      <button class="btn" id="mxok">OPSLAAN</button>
+      <button class="btn small ghost" id="mxx">ANNULEER</button>
     </div>`);
   o.querySelector('#mxx').onclick = () => o.remove();
   o.querySelector('#mxok').onclick = () => {

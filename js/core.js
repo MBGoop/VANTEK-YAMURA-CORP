@@ -22,7 +22,16 @@ function applyVisuals(){
   document.body.classList.toggle('comfort', !!S.comfort);
 }
 /* animatie uit als comfort AAN of systeem reduced-motion */
-function motionOff(){return REDUCED || (S&&S.comfort)}
+/* Animatie uit? Volgorde: comfort-modus > expliciete keuze > systeeminstelling.
+   Belangrijk: Android zet bij BATTERIJBESPARING prefers-reduced-motion aan.
+   Daardoor stond het figuurtje stil zonder dat je iets had aangeraakt.
+   Met S.anim='aan' overrule je dat. */
+function motionOff(){
+  if(S&&S.comfort)return true;
+  if(S&&S.anim==='aan')return false;
+  if(S&&S.anim==='uit')return true;
+  return REDUCED;                 /* 'auto' */
+}
 
 /* ---------------- XP / LEVEL ---------------- */
 const level=()=>Math.min(30,Math.floor(Math.sqrt(S.xp/40))+1);

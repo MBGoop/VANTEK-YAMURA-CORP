@@ -164,3 +164,54 @@ label{font-size:8px;color:var(--g2);display:block;margin:12px 0 6px;text-transfo
 /* 6 nav-items i.p.v. 5 (VITALS toegevoegd) — voorkom afkappen op smalle toestellen */
 nav button{min-width:0;letter-spacing:0}
 @media(max-width:360px){ nav button{font-size:6px} }
+
+/* labelkop binnen een panel (gebruikt door VITALS + plan-kaart) */
+.lbl{font-size:7px;letter-spacing:1px;color:var(--g2);margin-bottom:6px}
+.card{background:var(--g1);border:3px solid var(--g2);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.card p{margin:3px 0;font-size:9px}
+.card .row{margin-top:10px}
+.card button{width:100%}
+
+/* =====================================================
+   v4 — LEESBAARHEID
+   Press Start 2P is prachtig maar onleesbaar onder 10px.
+   Regel: pixelfont ALLEEN voor chrome (titels, knoppen, nav).
+   Alles wat je echt moet lézen gaat naar VT323, groter.
+===================================================== */
+.tiny, .legend, .legend span, .hint, .dose, .meta, .sub{
+  font-family:var(--body);
+  font-size:calc(15px * var(--fs));
+  line-height:1.5;
+  letter-spacing:0;
+  text-transform:none;
+}
+.dim{color:#a8d68f}                     /* was #8fc47a — te weinig contrast */
+.panel h2{font-size:11px;line-height:1.6}
+.chip{font-size:calc(14px * var(--fs));font-family:var(--body);padding:10px 12px}
+.btn{font-size:10px;padding:13px}
+.btn.small{font-size:9px;padding:10px}
+.speech{font-size:calc(17px * var(--fs));line-height:1.6}
+.card p{font-size:calc(15px * var(--fs));font-family:var(--body);line-height:1.5}
+.lbl{font-size:8px;color:var(--g3b)}
+.ex .nm{font-size:calc(16px * var(--fs))}
+
+/* "vorige keer"-hint prominenter: dit is de reden dat je de app opent */
+.hint{display:block;margin-top:2px;color:var(--g3b);opacity:.95}
+.hint .up{color:#e8d98a}
+
+/* weekstrip bovenaan de monitor */
+.wstrip{display:flex;gap:4px;margin:0 10px 10px;cursor:pointer}
+.wstrip .wd{flex:1;text-align:center;padding:6px 2px;background:var(--g1);
+  border:2px solid var(--g1);border-radius:var(--r)}
+.wstrip .wd .dw{font-size:7px;color:var(--g2)}
+.wstrip .wd .st{font-family:var(--body);font-size:14px;color:var(--g3)}
+.wstrip .wd.today{border-color:var(--g3b)}
+.wstrip .wd.done{background:var(--g2)}
+.wstrip .wd.done .st,.wstrip .wd.done .dw{color:var(--g0)}
+.wstrip .wd.rest .st{color:var(--g2)}
+
+/* racesplits-tabel */
+.split{display:flex;justify-content:space-between;padding:5px 0;
+  border-bottom:1px solid var(--g1);font-family:var(--body);font-size:15px}
+.split.run{color:var(--g3b)}
+.split.weak{color:#e8b04a}

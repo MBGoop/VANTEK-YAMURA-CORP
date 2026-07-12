@@ -27,9 +27,11 @@ function progressTip(k){
   if(last.r>=10)return `tip: mik op ${last.w}kg x ${last.r+2}`;
   return `tip: herhaal ${last.w}kg x ${last.r}, dan opbouwen`;
 }
-function logSheet(ses){
+function logSheet(ses, ds){
+  ds = ds || todayStr();
+  const retro = ds !== todayStr();            /* sessie uit het verleden loggen */
   const mode=dayMode();
-  const w=sessionPlan(todayStr(), mode==='light');
+  const w=sessionPlan(ds, retro?false:mode==='light');
   /* alle main-oefeningen met een gewichtscomponent */
   const wtItems=w.main.filter(it=>Array.isArray(it)&&typeof it[0]==='object'&&EX[it[0].key].wt&&has('kb'));
   const wtHtml=wtItems.length?`
@@ -42,13 +44,13 @@ function logSheet(ses){
         ${tip?`<p class="tiny dim" style="margin-top:2px">${tip}</p>`:''}
       </div>`}).join('')}`:'';
   const o=sheet(`
-    <h2 style="font-size:10px">PROTOCOL LOGGEN</h2>
+    <h2 style="font-size:10px">PROTOCOL LOGGEN${retro?` — ${ds}`:''}</h2>
     <label>Hoe zwaar voelde het? (RPE${S.profile.parqFlag?' — hou het onder 6':''})</label>
     <input type="range" id="rpe" min="1" max="10" value="7">
     <div class="row tiny dim"><span>LICHT</span><div class="spacer"></div><b id="rpev" style="color:var(--g3b)">7</b><div class="spacer"></div><span>MAXIMAAL</span></div>
     ${wtHtml}
     <label style="margin-top:14px">Notitie (optioneel)</label>
-    <input type="text" id="lg-note" maxlength="80" placeholder="bv. knie voelde goed, KB te licht" value="${S.notes[todayStr()]||''}">
+    <input type="text" id="lg-note" maxlength="80" placeholder="bv. knie voelde goed, KB te licht" value="${S.notes[ds]||''}">
     <label style="margin-top:14px">Alles gedaan zoals gepland?</label>
     <div class="chips" id="lg-c"><button class="chip sel" data-v="1">JA</button><button class="chip" data-v="0.6">DEELS</button></div>
     <button class="btn" style="margin-top:18px" id="lg-go">OPSLAAN</button>`);
@@ -59,36 +61,41 @@ function logSheet(ses){
     const rpe=+o.querySelector('#rpe').value;
     S.rpeLog.push(rpe);S.rpeLog=S.rpeLog.slice(-10);
     const noteVal=o.querySelector('#lg-note').value.trim();
-    if(noteVal)S.notes[todayStr()]=noteVal; else delete S.notes[todayStr()];
+    if(noteVal)S.notes[ds]=noteVal; else delete S.notes[ds];
     /* gewichten opslaan */
     o.querySelectorAll('[data-wk]').forEach(inp=>{
       const k=inp.dataset.wk, wv=parseFloat(inp.value);
       const rv=parseInt(o.querySelector(`[data-rk="${k}"]`).value);
       if(wv>0){
         if(!S.exLog[k])S.exLog[k]=[];
-        S.exLog[k].push({d:todayStr(),w:wv,r:rv>0?rv:null});
+        S.exLog[k].push({d:ds,w:wv,r:rv>0?rv:null});
+        S.exLog[k].sort((a,b)=>a.d<b.d?-1:1);
         S.exLog[k]=S.exLog[k].slice(-20);
       }
     });
-    S.done[todayStr()]=true;S.lastActive=todayStr();bumpStreakIfNew();
+    S.done[ds]=true;
+    /* streak enkel bijwerken voor vandaag — anders kan je hem achteraf 'kopen' */
+    if(!retro){ S.lastActive=ds; bumpStreakIfNew(); }
     const map={strength:'power',strengthL:'power',strengthU:'power',conditioning:'speed',conditioning2:'speed',mixed:'grit',circuit:'grit',mobility:'mobility'};
     S.stats[map[ses.type]]+=Math.round(3*frac);
     S.stats.grit+=1;
     const xp=Math.round((20+S.dur*0.6)*frac), cn=Math.round(10*frac);
     gainXP(xp,cn);
     /* historie loggen */
-    S.history.push({d:todayStr(),type:ses.type,rpe,frac,xp});
+    S.history.push({d:ds,type:ses.type,rpe,frac,xp});
+    S.history.sort((a,b)=>a.d<b.d?-1:1);
     S.history=S.history.slice(-100);
     o.remove();toast(`+${xp} XP / +${cn} CR — DATA VERWERKT`);
     checkBadges();
     if(S.rpeLog.length>=2&&S.rpeLog.slice(-2).every(r=>r>=9))toast('WAARSCHUWING: 2 zware sessies — volgende automatisch lichter');
-    render('mon');
+    render(retro?'trn':'mon');
   };
 }
 
 /* ---------------- EXTERNE SESSIE (buiten de app getraind) ---------------- */
 let EXTKIND='gym';
-function externalLogSheet(){
+function externalLogSheet(ds){
+  ds = ds || todayStr();
   EXTKIND='gym';
   const o=sheet(`
     <h2 style="font-size:10px">EXTERNE SESSIE</h2>
@@ -140,13 +147,13 @@ function externalLogSheet(){
     if(EXTKIND==='gym'){S.stats.power+=3;S.stats.grit+=1;}
     else{S.stats.speed+=3;S.stats.grit+=1;}
     S.rpeLog.push(rpe);S.rpeLog=S.rpeLog.slice(-10);
-    S.done[todayStr()]=true;S.lastActive=todayStr();bumpStreakIfNew();
+    S.done[ds]=true;S.lastActive=todayStr();bumpStreakIfNew();
     const xp=Math.round(20+dur*0.6), cn=Math.round(10);
     gainXP(xp,cn);
     const label=EXTKIND==='gym'?'GYM / KRACHT':'LOOP';
     const fullNote=(note?note:'')+(EXTKIND==='run'&&km?` (${km}km, ${dur}min)`:'');
     if(fullNote)S.notes[todayStr()]=fullNote;
-    S.history.push({d:todayStr(),type:'ext_'+EXTKIND,rpe,frac:1,xp,km,dur});
+    S.history.push({d:ds,type:'ext_'+EXTKIND,rpe,frac:1,xp,km,dur});
     S.history=S.history.slice(-100);
     o.remove();toast(`${label} GEREGISTREERD${extra} — +${xp} XP`);
     checkBadges();

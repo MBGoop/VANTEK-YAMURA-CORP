@@ -17,7 +17,11 @@ function migrate(){
   if(!S.hr) S.hr = { maxHR:180, restLog:[], baseline:null };
   if(!S.hr.maxHR)   S.hr.maxHR = 180;
   if(!S.hr.restLog) S.hr.restLog = [];
-  if(S.hyroxStart === undefined) S.hyroxStart = null;   // vast Hyrox-plan nog niet gestart
+  if(S.hyroxStart === undefined) S.hyroxStart = null;
+  if(S.anim === undefined) S.anim = 'auto';
+  if(!S.customEx)  S.customEx  = {};
+  if(!S.hyroxPR)   S.hyroxPR   = {};
+  if(S.lastReview === undefined) S.lastReview = null;   // vast Hyrox-plan nog niet gestart
 
   S.schemaVersion = SCHEMA_VERSION;
   save();

@@ -91,8 +91,8 @@ function vAgenda(el){
      <p class="tiny dim">Week ${planWeek()} van 4. Week 2: +1 set. Week 3: intenser. Week 4: deload (bewust lichter). Daarna start automatisch een nieuwe cycle.</p>
      <p class="tiny dim" style="margin-top:6px">Consistentie (14 dagen): <b style="color:var(--g3b)">${consistency()}%</b></p>
    </div>`;
-  $('#ag-prev').onclick=()=>{AGDOFF--;render('agd')};
-  $('#ag-next').onclick=()=>{AGDOFF++;render('agd')};
+  $('#ag-prev').onclick=()=>{AGDOFF--;render('trn')};
+  $('#ag-next').onclick=()=>{AGDOFF++;render('trn')};
   el.querySelectorAll('.cal .d[data-d]').forEach(b=>b.onclick=()=>daySheet(b.dataset.d));
 }
 function daySheet(ds){
@@ -108,6 +108,9 @@ function daySheet(ds){
     ${w?`${renderBlock('WARM-UP',w.warm)}${renderBlock('MAIN SET',w.main)}${renderBlock('FINISHER',w.fin)}`:(extSes.length?'':'<p class="tiny dim" style="margin-top:8px">Geen protocol op deze dag.</p>')}
     <div class="row" style="margin-top:14px;flex-wrap:wrap">
       <button class="btn small ghost" id="ds-rest">${isRest?'MAAK TRAININGSDAG':'MAAK RUSTDAG'}</button>
+      ${(ds<=todayStr() && !S.done[ds] && ses)?'<button class="btn small" id="ds-log">REGISTREER ALS GEDAAN</button>':''}
+      ${(ds<=todayStr() && !S.done[ds])?'<button class="btn small ghost" id="ds-ext">EXTERNE ACTIVITEIT</button>':''}
+      ${S.done[ds]?'<button class="btn small ghost" id="ds-unlog">LOG WISSEN</button>':''}
       ${ses?'<button class="btn small ghost" id="ds-type">ANDER TYPE</button>':''}
       ${ses?'<button class="btn small ghost" id="ds-move">VERPLAATS</button>':''}
       ${ses?'<button class="btn small ghost" id="ds-ex">OEFENINGEN</button>':''}
@@ -119,7 +122,7 @@ function daySheet(ds){
     S.overrides[ds]=S.overrides[ds]||{};
     if(isRest){delete S.overrides[ds].rest; if(!basePlanSession(ds))S.overrides[ds].type='mixed';}
     else{S.overrides[ds].rest=true;}
-    cleanOverride(ds);save();o.remove();render('agd');
+    cleanOverride(ds);save();o.remove();render('trn');
   };
   const typ=o.querySelector('#ds-type');
   if(typ)typ.onclick=()=>{o.remove();pickTypeSheet(ds)};
@@ -128,7 +131,17 @@ function daySheet(ds){
   const exb=o.querySelector('#ds-ex');
   if(exb)exb.onclick=()=>{o.remove();editSessionSheet(ds)};
   const rst=o.querySelector('#ds-reset');
-  if(rst)rst.onclick=()=>{delete S.overrides[ds];save();o.remove();render('agd')};
+  if(rst)rst.onclick=()=>{delete S.overrides[ds];save();o.remove();render('trn')};
+  /* achteraf loggen — de belangrijkste ontbrekende functie: een gemiste dag
+     die je niet kan bijwerken, maakt dat je de tracker binnen de maand loslaat */
+  const lg=$('#ds-log');  if(lg)  lg.onclick=()=>{o.remove(); logSheet(sessionForDate(ds), ds)};
+  const ext=$('#ds-ext'); if(ext) ext.onclick=()=>{o.remove(); externalLogSheet(ds)};
+  const un=$('#ds-unlog');if(un)  un.onclick=()=>{
+    if(confirm('Log van deze dag wissen?')){
+      delete S.done[ds];
+      S.history=S.history.filter(h=>h.d!==ds);
+      save();o.remove();render('trn');
+    }};
 }
 /* verwijder lege override-objecten */
 function cleanOverride(ds){
@@ -144,7 +157,7 @@ function pickTypeSheet(ds){
     S.overrides[ds].type=c.dataset.v;
     delete S.overrides[ds].rest;
     if(S.overrides[ds].ex)delete S.overrides[ds].ex; /* oefening-overrides gelden niet meer bij ander type */
-    save();o.remove();render('agd');
+    save();o.remove();render('trn');
   });
 }
 function moveSheet(ds){
@@ -162,7 +175,7 @@ function moveSheet(ds){
     if(sessionForDate(dest)){toast('DIE DAG HEEFT AL EEN SESSIE');return}
     S.overrides[ds]=S.overrides[ds]||{};
     S.overrides[ds].movedTo=dest;
-    save();o.remove();render('agd');
+    save();o.remove();render('trn');
   });
 }
 /* oefeningen aanpassen: vervangen, verwijderen, toevoegen */
@@ -220,6 +233,7 @@ function addPicker(ds){
 function vBib(el){
   const keys=Object.keys(EX).filter(k=>BIBCAT==='ALLE'||EX[k].cat===BIBCAT);
   el.innerHTML=`
+   <button class="btn ghost" id="bib-add" style="margin-bottom:10px">+ EIGEN OEFENING</button>
    <div class="panel">
      <h2>OEFENBIBLIOTHEEK</h2>
      <div class="chips">${CATS.map(c=>`<button class="chip ${BIBCAT===c?'sel':''}" data-c="${c}">${c}</button>`).join('')}</div>
@@ -239,9 +253,40 @@ function vBib(el){
      </div>
    </div>`;
   el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{BIBCAT=c.dataset.c;render('bib')});
+  const ba=$('#bib-add'); if(ba) ba.onclick=customExSheet;
 }
 
 /* ---------------- CORP (depot + crew + bodyweight) ---------------- */
+  /* handler wordt hieronder gebonden */
+/* Eigen oefeningen: worden opgeslagen in S.customEx en bij het laden over de
+   CSV heen gelegd. De CSV blijft de officiele bron die in de repo staat —
+   dit is de ontsnappingsklep voor wie geen Excel wil openen. */
+function customExSheet(){
+  const o=sheet(`
+    <h2 style="font-size:10px">EIGEN OEFENING</h2>
+    <label style="margin-top:10px">Naam</label>
+    <input type="text" id="ce-n" maxlength="30" placeholder="bv. Wall balls">
+    <label style="margin-top:10px">Categorie</label>
+    <div class="chips" id="ce-cat">${CATS.map((c,i)=>`<button class="chip ${i===0?'sel':''}" data-v="${c}">${c}</button>`).join('')}</div>
+    <label style="margin-top:10px">Materiaal</label>
+    <div class="chips" id="ce-need">${[['geen','GEEN'],['kb','KETTLEBELL'],['band','BAND'],['run','LOPEN'],['pullup','PULL-UP']].map(([v,l],i)=>`<button class="chip ${i===0?'sel':''}" data-v="${v}">${l}</button>`).join('')}</div>
+    <label style="margin-top:10px">Uitvoering (1 zin)</label>
+    <input type="text" id="ce-d" maxlength="120" placeholder="Cue die je niet wil vergeten">
+    <button class="btn" style="margin-top:16px" id="ce-go">TOEVOEGEN</button>`);
+  let cat=CATS[0], need='geen';
+  o.querySelectorAll('#ce-cat .chip').forEach(c=>c.onclick=()=>{cat=c.dataset.v;o.querySelectorAll('#ce-cat .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')});
+  o.querySelectorAll('#ce-need .chip').forEach(c=>c.onclick=()=>{need=c.dataset.v;o.querySelectorAll('#ce-need .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')});
+  o.querySelector('#ce-go').onclick=()=>{
+    const n=o.querySelector('#ce-n').value.trim();
+    if(!n){toast('NAAM ONTBREEKT');return}
+    const id='cx_'+n.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12)+Date.now().toString(36).slice(-3);
+    const ex={n,cat,need,zone:null,stat:'grit',
+      desc:o.querySelector('#ce-d').value.trim()||'Eigen oefening.',
+      reg:'—',prog:'—',custom:true};
+    S.customEx[id]=ex; EX[id]=ex; save(); o.remove();
+    toast('OEFENING TOEGEVOEGD'); render('bib');
+  };
+}
 function vCorp(el){
   el.innerHTML=`
    <div class="panel">
@@ -303,7 +348,12 @@ function vCorp(el){
      <h2>SYSTEEM</h2>
      <button class="btn ghost" id="installapp">INSTALLEER APP OP TOESTEL</button>
      <p class="tiny dim" style="margin-top:8px">Werkt offline zodra geinstalleerd. Op Android: knop hierboven of Chrome-menu > Toevoegen aan startscherm. Op iPhone: deel-knop > Zet op beginscherm.</p>
-     <p class="tiny dim" style="margin-top:6px">Wearables (Garmin): gepland voor v1.5 — de dagelijkse scan doet nu hetzelfde werk.</p>
+     <p class="tiny dim" style="margin-top:6px">Hartslag log je zelf via VITALS — dat is nauwkeuriger dan een geschatte wearable-score.</p>
+     <div class="lbl" style="margin-top:14px">ANIMATIE</div>
+     <div class="chips" id="anim-pick">
+       ${[['auto','AUTO'],['aan','ALTIJD AAN'],['uit','UIT']].map(([val,lab])=>`<button class="chip ${(S.anim||'auto')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
+     </div>
+     <p class="tiny dim">AUTO volgt je toestel. Let op: Android zet bij batterijbesparing de animatie uit — kies ALTIJD AAN als je specimen stilstaat.</p>
      <p class="tiny dim" style="margin-top:6px">Algemene fitness-suggesties, geen medisch advies. Bij pijn of klachten: arts of kinesist. Alle data lokaal (localStorage), geen account, geen cloud.</p>
      <button class="btn ghost" style="margin-top:12px" id="export">DATA EXPORTEREN (BACK-UP)</button>
      <button class="btn ghost" style="margin-top:8px" id="import">BACK-UP IMPORTEREN</button>
@@ -353,6 +403,7 @@ function vCorp(el){
   el.querySelectorAll('#fs-pick .chip').forEach(c=>c.onclick=()=>{S.fontScale=parseFloat(c.dataset.v);save();applyVisuals();render('crp')});
   el.querySelectorAll('#comfort-pick .chip').forEach(c=>c.onclick=()=>{S.comfort=c.dataset.v==='1';save();applyVisuals();render('crp')});
   $('#logboek').onclick=logbookSheet;
+  el.querySelectorAll('#anim-pick .chip').forEach(c=>c.onclick=()=>{S.anim=c.dataset.v;save();render('crp');mountScene()});
   $('#import').onclick=()=>{
     const inp=document.createElement('input');inp.type='file';inp.accept='application/json,.json';
     inp.onchange=e=>{
