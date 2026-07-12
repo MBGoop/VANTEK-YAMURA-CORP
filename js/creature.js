@@ -79,6 +79,9 @@ function mood(){
 
 /* ---- SPACESHIP INTERIEUR ---- */
 function drawScene(){
+  /* Canvas weg uit de DOM (andere tab)? Netjes stoppen — mountScene
+     start opnieuw zodra de monitor terug in beeld is. */
+  if(!SC.cv||!SC.cv.isConnected){SC.raf=null;return}
   const P=pal(), t=SC.t;
   const W=160,H=144;
   SC.ctx.clearRect(0,0,W,H);
@@ -178,14 +181,43 @@ function drawScene(){
     px(dx,dy,6,4,P[2]);px(dx+2,dy-2,2,2,P[3]);px(dx+1,dy+1,1,1,P[0]);
   }
   SC.t++;
+  SC.beat=performance.now();          /* hartslag voor de watchdog */
   SC.raf=requestAnimationFrame(drawScene);
 }
+/* Eén kapotte frame mag de lus niet voorgoed stoppen: fout loggen,
+   volgende frame gewoon proberen. */
+const _drawScene=drawScene;
+drawScene=function(){
+  try{_drawScene()}
+  catch(e){
+    if(!SC.err){SC.err=true;console.error('[GRIT] scene-frame fout:',e)}
+    SC.raf=requestAnimationFrame(drawScene);
+  }
+};
+/* WATCHDOG — de reden dat de animatie 'stopte na tabwissel':
+   browsers bevriezen rAF-lussen bij tab/app-wissel en (zeker met
+   back/forward-cache of standalone PWA op mobiel) hervatten ze die
+   niet altijd. Bij elke terugkeer in beeld herstarten we de lus
+   expliciet. mountScene is idempotent, dus dubbel starten kan niet. */
+function sceneWatchdog(){
+  if(document.hidden)return;
+  const cv=document.querySelector('#scene');
+  if(!cv)return;
+  if(motionOff())return;              /* statisch is hier een keuze */
+  const dood=!SC.beat||performance.now()-SC.beat>1000;
+  if(dood||SC.cv!==cv)mountScene();
+}
+document.addEventListener('visibilitychange',sceneWatchdog);
+window.addEventListener('focus',sceneWatchdog);
+window.addEventListener('pageshow',sceneWatchdog);   /* bfcache-herstel */
+
 function mountScene(){
   SC.cv=$('#scene'); if(!SC.cv)return;
+  SC.err=false;
   SC.cv.width=160;SC.cv.height=144;
   SC.ctx=SC.cv.getContext('2d');
   cancelAnimationFrame(SC.raf);
-  if(motionOff()){drawScene();cancelAnimationFrame(SC.raf);}
+  if(motionOff()){drawScene();cancelAnimationFrame(SC.raf);SC.raf=null;}
   else drawScene();
 }
 function drawPreview(cv,variant,st,eq=[]){
