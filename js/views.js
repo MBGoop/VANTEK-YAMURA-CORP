@@ -15,7 +15,6 @@ function vBench(el){
        <h4>${BENCHMARK.rounds} RONDES · 6 STATIONS</h4>
        ${BENCHMARK.stations.map((s,i)=>`<div class="station"><span class="no">${i+1}</span><div class="exmain"><span class="nm">${s.t}</span></div></div>`).join('')}
      </div>
-     <p class="tiny dim">Warm 5 min op. For Time: de klok loopt tot je klaar bent. Rusten mag, tijd tikt door.</p>
      <button class="btn" style="margin-top:12px" id="bench-go">START BENCHMARK</button>
    </div>
    <div class="panel inv">
@@ -168,7 +167,6 @@ function moveSheet(ds){
     opts+=`<button class="chip" data-d="${t}">${['ZO','MA','DI','WO','DO','VR','ZA'][new Date(t).getDay()]} ${t.slice(8)}/${t.slice(5,7)}</button>`;
   }
   const o=sheet(`<h2 style="font-size:10px">${ds} — VERPLAATS NAAR</h2>
-    <p class="tiny dim">Kies een dag binnen de komende week. De sessie verschuift; de oude dag wordt rust.</p>
     <div class="chips" style="margin-top:10px">${opts}</div>`);
   o.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
     const dest=c.dataset.d;
@@ -179,53 +177,150 @@ function moveSheet(ds){
   });
 }
 /* oefeningen aanpassen: vervangen, verwijderen, toevoegen */
-function editSessionSheet(ds){
-  const ses=sessionForDate(ds);
-  if(!ses){toast('GEEN SESSIE OP DEZE DAG');return}
-  const w=sessionPlan(ds);
-  const rows=w.main.map((it,i)=>{
-    if(typeof it[0]!=='object')return `<div class="ex"><span>${it[0]}</span><div class="spacer"></div><span class="dose">${it[1]}</span></div>`;
-    const e=EX[it[0].key];
-    return `<div class="ex"><div class="exmain"><span class="nm">${e.n}</span><span class="hint">${it[1]}</span></div>
-      <button class="altbtn" data-swap="${i}">WISSEL</button>
-      <button class="altbtn" data-rm="${i}">X</button></div>`;
-  }).join('');
-  const o=sheet(`<h2 style="font-size:10px">${ds} — OEFENINGEN</h2>
-    <p class="tiny dim">Vervang, verwijder of voeg toe. Blijft bewaard voor deze dag.</p>
-    <div class="block"><h4>MAIN SET</h4>${rows}</div>
-    <button class="btn ghost" style="margin-top:10px" id="es-add">+ OEFENING TOEVOEGEN</button>
-    <button class="btn" style="margin-top:8px" id="es-done">KLAAR</button>`);
-  o.querySelectorAll('[data-swap]').forEach(b=>b.onclick=()=>{o.remove();swapPicker(ds,+b.dataset.swap)});
-  o.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{
-    S.overrides[ds]=S.overrides[ds]||{};S.overrides[ds].ex=S.overrides[ds].ex||{};
-    S.overrides[ds].ex.rm=[...(S.overrides[ds].ex.rm||[]),+b.dataset.rm];
-    save();o.remove();editSessionSheet(ds);
-  });
-  o.querySelector('#es-add').onclick=()=>{o.remove();addPicker(ds)};
-  o.querySelector('#es-done').onclick=()=>{o.remove();render(TAB==='agd'?'agd':'trn')};
+/* =====================================================
+   SESSIE SAMENSTELLEN
+   Model: zodra je iets aanpast, wordt de main set gematerialiseerd tot een
+   expliciete lijst in S.overrides[ds].ex.list. Wat je ziet is wat er staat —
+   geen onzichtbare lagen van swaps en removes meer.
+===================================================== */
+function currentList(ds){
+  const ov = S.overrides[ds];
+  if(ov && ov.ex && ov.ex.list) return structuredClone(ov.ex.list);
+  const w = sessionPlan(ds);
+  return (w ? w.main : []).map(it =>
+    (typeof it[0] === 'object')
+      ? {key:it[0].key, dose:it[1], swapped:!!it[0].swapped}
+      : {key:it[0], dose:it[1]}
+  );
 }
-function availableEx(){return Object.keys(EX).filter(k=>has(EX[k].need))}
-function swapPicker(ds,idx){
-  const list=availableEx();
-  const o=sheet(`<h2 style="font-size:10px">VERVANG DOOR</h2>
-    <div id="swlist">${CATS.filter(c=>c!=='ALLE').map(cat=>`
-      <div class="block"><h4>${cat}</h4>${list.filter(k=>EX[k].cat===cat).map(k=>`<div class="ex"><span class="nm">${EX[k].n}</span><div class="spacer"></div><button class="altbtn" data-k="${k}">KIES</button></div>`).join('')}</div>`).join('')}</div>`);
-  o.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{
-    S.overrides[ds]=S.overrides[ds]||{};S.overrides[ds].ex=S.overrides[ds].ex||{};
-    S.overrides[ds].ex.swap=S.overrides[ds].ex.swap||{};
-    S.overrides[ds].ex.swap[idx]=b.dataset.k;
-    save();o.remove();editSessionSheet(ds);
+function saveList(ds, list){
+  S.overrides[ds] = S.overrides[ds] || {};
+  S.overrides[ds].ex = S.overrides[ds].ex || {};
+  S.overrides[ds].ex.list = list;
+  save();
+}
+function exLabel(x){
+  const e = EX[x.key];
+  if(!e) return x.key === 'ROND' ? 'Ronde' : x.key;
+  return x.swapped ? e.reg : e.n;
+}
+
+function editSessionSheet(ds){
+  const ses = sessionForDate(ds);
+  if(!ses){ toast('GEEN SESSIE OP DEZE DAG'); return }
+  const list = currentList(ds);
+
+  const rows = list.map((x,i) => `
+    <div class="ex edit">
+      <div class="exmain">
+        <span class="nm">${exLabel(x)}</span>
+        <span class="hint">${x.dose}${x.kg?` · ${x.kg}KG`:''}</span>
+      </div>
+      <div class="exbtns">
+        <button class="altbtn" data-up="${i}" ${i===0?'disabled':''}>&#9650;</button>
+        <button class="altbtn" data-dn="${i}" ${i===list.length-1?'disabled':''}>&#9660;</button>
+        <button class="altbtn" data-ed="${i}">SET</button>
+        <button class="altbtn" data-sw="${i}">WISSEL</button>
+        <button class="altbtn" data-rm="${i}">X</button>
+      </div>
+    </div>`).join('');
+
+  const o = sheet(`<h2 style="font-size:10px">${ds} — OEFENINGEN</h2>
+    <div class="block"><h4>MAIN SET</h4>${rows || '<p class="tiny dim">Leeg.</p>'}</div>
+    <button class="btn ghost" style="margin-top:10px" id="es-add">+ OEFENING TOEVOEGEN</button>
+    ${S.overrides[ds]&&S.overrides[ds].ex&&S.overrides[ds].ex.list
+      ? '<button class="btn small ghost" style="margin-top:8px" id="es-reset">TERUG NAAR ORIGINEEL</button>' : ''}
+    <button class="btn" style="margin-top:8px" id="es-done">KLAAR</button>`);
+
+  const redo = () => { o.remove(); editSessionSheet(ds); };
+  const move = (i,d) => {
+    const l = currentList(ds);
+    if(i+d < 0 || i+d >= l.length) return;
+    [l[i], l[i+d]] = [l[i+d], l[i]];
+    saveList(ds, l); redo();
+  };
+  o.querySelectorAll('[data-up]').forEach(b => b.onclick = () => move(+b.dataset.up, -1));
+  o.querySelectorAll('[data-dn]').forEach(b => b.onclick = () => move(+b.dataset.dn, +1));
+  o.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+    const l = currentList(ds); l.splice(+b.dataset.rm, 1); saveList(ds, l); redo();
+  });
+  o.querySelectorAll('[data-ed]').forEach(b => b.onclick = () => { o.remove(); doseSheet(ds, +b.dataset.ed) });
+  o.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { o.remove(); swapPicker(ds, +b.dataset.sw) });
+  o.querySelector('#es-add').onclick  = () => { o.remove(); addPicker(ds) };
+  const rs = o.querySelector('#es-reset');
+  if(rs) rs.onclick = () => {
+    if(confirm('Terug naar de originele sessie? Je aanpassingen verdwijnen.')){
+      delete S.overrides[ds].ex; save(); redo();
+    }
+  };
+  o.querySelector('#es-done').onclick = () => { o.remove(); render('trn') };
+}
+
+/* Sets, reps en gewicht — zoals in Strong/Hevy. Het gewicht dat je hier zet,
+   is meteen het startgewicht dat je bij het loggen voorgesteld krijgt. */
+function doseSheet(ds, i){
+  const l = currentList(ds);
+  const x = l[i]; if(!x) return;
+  const m = /^(\d+)\s*x\s*(.+)$/i.exec(x.dose || '');
+  const sets = m ? m[1] : '3';
+  const reps = m ? m[2] : (x.dose || '10');
+  const last = lastLog(x.key);
+
+  const o = sheet(`<h2 style="font-size:10px">${exLabel(x)}</h2>
+    ${last?`<p class="tiny dim">Vorige keer: ${last.w}KG${last.r?` x ${last.r}`:''}</p>`:''}
+    <label style="margin-top:12px">Sets</label>
+    <input class="mini" id="d-s" type="number" inputmode="numeric" min="1" max="10" value="${sets}">
+    <label style="margin-top:10px">Reps / duur</label>
+    <input type="text" id="d-r" maxlength="14" value="${reps}" placeholder="bv. 8, 30 sec, 20m">
+    <label style="margin-top:10px">Gewicht (optioneel)</label>
+    <input class="mini" id="d-kg" type="number" inputmode="decimal" min="0" max="200"
+           value="${x.kg ?? (last?last.w:'')}" placeholder="KG">
+    <button class="btn" style="margin-top:16px" id="d-ok">OPSLAAN</button>`);
+
+  o.querySelector('#d-ok').onclick = () => {
+    const s = parseInt(o.querySelector('#d-s').value, 10) || 3;
+    const r = o.querySelector('#d-r').value.trim() || '10';
+    const kg = parseFloat(o.querySelector('#d-kg').value);
+    l[i].dose = `${s}x${r}`;
+    if(kg > 0) l[i].kg = kg; else delete l[i].kg;
+    saveList(ds, l); o.remove(); editSessionSheet(ds);
+  };
+}
+
+function availableEx(){ return Object.keys(EX).filter(k => has(EX[k].need)) }
+
+function exPicker(titel, onPick){
+  const list = availableEx();
+  const o = sheet(`<h2 style="font-size:10px">${titel}</h2>
+    <input type="text" id="xp-q" placeholder="Zoeken..." style="margin-top:8px">
+    <div id="xp-list" style="margin-top:8px"></div>`);
+  const draw = (q='') => {
+    const f = list.filter(k => EX[k].n.toLowerCase().includes(q.toLowerCase()));
+    o.querySelector('#xp-list').innerHTML = CATS.filter(c => c!=='ALLE').map(cat => {
+      const items = f.filter(k => EX[k].cat === cat);
+      if(!items.length) return '';
+      return `<div class="block"><h4>${cat}</h4>${items.map(k =>
+        `<div class="ex"><span class="nm">${EX[k].n}</span><div class="spacer"></div>
+         <button class="altbtn" data-k="${k}">KIES</button></div>`).join('')}</div>`;
+    }).join('') || '<p class="tiny dim">Niets gevonden.</p>';
+    o.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { o.remove(); onPick(b.dataset.k) });
+  };
+  o.querySelector('#xp-q').oninput = e => draw(e.target.value);
+  draw();
+}
+
+function swapPicker(ds, idx){
+  exPicker('VERVANG DOOR', key => {
+    const l = currentList(ds);
+    l[idx] = {key, dose: l[idx] ? l[idx].dose : '3x10'};
+    saveList(ds, l); editSessionSheet(ds);
   });
 }
 function addPicker(ds){
-  const list=availableEx();
-  const o=sheet(`<h2 style="font-size:10px">OEFENING TOEVOEGEN</h2>
-    ${CATS.filter(c=>c!=='ALLE').map(cat=>`
-      <div class="block"><h4>${cat}</h4>${list.filter(k=>EX[k].cat===cat).map(k=>`<div class="ex"><span class="nm">${EX[k].n}</span><div class="spacer"></div><button class="altbtn" data-k="${k}">+</button></div>`).join('')}</div>`).join('')}`);
-  o.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{
-    S.overrides[ds]=S.overrides[ds]||{};S.overrides[ds].ex=S.overrides[ds].ex||{};
-    S.overrides[ds].ex.add=[...(S.overrides[ds].ex.add||[]),{key:b.dataset.k,dose:'3x10'}];
-    save();o.remove();editSessionSheet(ds);
+  exPicker('OEFENING TOEVOEGEN', key => {
+    const l = currentList(ds);
+    l.push({key, dose:'3x10'});
+    saveList(ds, l); editSessionSheet(ds);
   });
 }
 
@@ -309,7 +404,6 @@ function vCorp(el){
        <input class="mini" type="number" inputmode="decimal" id="bw-in" placeholder="KG" style="flex:1;width:auto">
        <button class="btn small" id="bw-log">LOG</button>
      </div>
-     <p class="tiny dim" style="margin-top:6px">Wekelijks wegen volstaat. Trend telt, niet de dagelijkse schommeling.</p>
    </div>
    <div class="panel">
      <h2>🎯 MISSIEDOEL (WEDSTRIJD)</h2>
@@ -348,12 +442,10 @@ function vCorp(el){
      <h2>SYSTEEM</h2>
      <button class="btn ghost" id="installapp">INSTALLEER APP OP TOESTEL</button>
      <p class="tiny dim" style="margin-top:8px">Werkt offline zodra geinstalleerd. Op Android: knop hierboven of Chrome-menu > Toevoegen aan startscherm. Op iPhone: deel-knop > Zet op beginscherm.</p>
-     <p class="tiny dim" style="margin-top:6px">Hartslag log je zelf via VITALS — dat is nauwkeuriger dan een geschatte wearable-score.</p>
      <div class="lbl" style="margin-top:14px">ANIMATIE</div>
      <div class="chips" id="anim-pick">
        ${[['auto','AUTO'],['aan','ALTIJD AAN'],['uit','UIT']].map(([val,lab])=>`<button class="chip ${(S.anim||'auto')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
      </div>
-     <p class="tiny dim">AUTO volgt je toestel. Let op: Android zet bij batterijbesparing de animatie uit — kies ALTIJD AAN als je specimen stilstaat.</p>
      <p class="tiny dim" style="margin-top:6px">Algemene fitness-suggesties, geen medisch advies. Bij pijn of klachten: arts of kinesist. Alle data lokaal (localStorage), geen account, geen cloud.</p>
      <button class="btn ghost" style="margin-top:12px" id="export">DATA EXPORTEREN (BACK-UP)</button>
      <button class="btn ghost" style="margin-top:8px" id="import">BACK-UP IMPORTEREN</button>

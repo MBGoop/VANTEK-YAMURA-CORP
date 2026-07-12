@@ -36,7 +36,7 @@ function logSheet(ses, ds){
   const wtItems=w.main.filter(it=>Array.isArray(it)&&typeof it[0]==='object'&&EX[it[0].key].wt&&has('kb'));
   const wtHtml=wtItems.length?`
     <label style="margin-top:14px">Gebruikte gewichten (optioneel)</label>
-    ${wtItems.map(it=>{const k=it[0].key;const last=lastLog(k);const sug=last?last.w:suggestKB(k);const tip=progressTip(k);
+    ${wtItems.map(it=>{const k=it[0].key;const last=lastLog(k);const ovl=(S.overrides[ds]&&S.overrides[ds].ex&&S.overrides[ds].ex.list||[]).find(x=>x.key===k);const sug=(ovl&&ovl.kg)||(last?last.w:suggestKB(k));const tip=progressTip(k);
       return `<div style="margin-top:8px">
         <div class="row"><span class="body" style="flex:1">${EX[k].n}</span>
         <input class="mini" type="number" inputmode="decimal" data-wk="${k}" placeholder="KG" value="${sug||''}">

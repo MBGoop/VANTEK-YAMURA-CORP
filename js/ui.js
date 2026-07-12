@@ -267,7 +267,6 @@ function vMonitor(el){
        :`<p class="tiny" style="margin-top:8px">${dayLabel(ses.type)} — ${S.dur} MIN — WEEK ${planWeek()}${planWeek()===4?' [DELOAD]':''}</p><button class="btn" style="margin-top:10px" id="gotrain">START PROTOCOL</button>`)
        :`<p class="tiny" style="margin-top:8px">RUSTDAG. Streak loopt door.</p>`}
      <button class="btn ghost" style="margin-top:8px" id="extlog">+ EXTERNE SESSIE REGISTREREN</button>
-     <p class="tiny dim" style="margin-top:6px">Getraind buiten de app (MSA, gaan lopen...)? Log het hier — telt volwaardig mee.</p>
    </div>
    <div class="panel inv">
      <div class="row"><h2 style="margin:0">SIDE-QUEST</h2><div class="spacer"></div><span class="tiny dim">+${q.xp} XP</span></div>
@@ -388,9 +387,23 @@ function bindAlt(el){
     toast('ALTERNATIEF GELADEN — rustig opbouwen');
   });
 }
+/* EEN bron van waarheid voor de naam van een oefening in een sessie.
+   Was fout: renderBlock toonde de regressie-TEKST als naam, terwijl de
+   bewerk-sheet de originele oefening toonde. Twee namen voor hetzelfde ding. */
+function itemName(a){
+  const e = EX[a.key];
+  if(!e) return '?';
+  return a.swapped ? e.reg : e.n;
+}
+/* Bij een regressie is het gewichtsadvies onzinnig (bodyweight-variant). */
+function itemUsesWeight(a){
+  const e = EX[a.key];
+  return !!(e && e.wt && !a.swapped && has('kb'));
+}
 /* De reden dat mensen een trainingsapp openen: wat deed ik vorige keer?
    Progressive overload werkt alleen als je het vorige getal ziet staan. */
-function exHint(key){
+function exHint(key, item){
+  if(item && item.swapped) return '<span class="hint">Aangepast voor je pijnzone — bodyweight.</span>';
   const parts=[];
   const sug=suggestKB(key);
   const last=lastLog(key);
@@ -413,9 +426,9 @@ function renderBlock(title,items,withHints=false){
     const [a,dose]=it;
     if(a==='march'||a==='ROND'){const e=a==='ROND'?null:EX.march;return `<div class="ex"><span class="nm">${e?e.n:''}</span><div class="spacer"></div><span class="dose">${dose}</span></div>`}
     const e=EX[a.key];
-    const nm=a.swapped?e.reg:e.n;
+    const nm=itemName(a);
     return `<div class="ex ${a.swapped?'swapped':''}">
-      <div class="exmain"><span class="nm">${nm}</span>${withHints?exHint(a.key):''}</div>
+      <div class="exmain"><span class="nm">${nm}</span>${withHints?exHint(a.key,a):''}</div>
       <span class="dose">${dose}</span>
       ${e.reg!=='—'&&!a.swapped?`<button class="altbtn" data-k="${a.key}">ALT</button>`:''}
     </div>`;

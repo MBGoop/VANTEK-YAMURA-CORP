@@ -215,3 +215,10 @@ nav button{min-width:0;letter-spacing:0}
   border-bottom:1px solid var(--g1);font-family:var(--body);font-size:15px}
 .split.run{color:var(--g3b)}
 .split.weak{color:#e8b04a}
+
+/* bewerk-rij: naam boven, knoppen eronder — anders passen 5 knoppen nooit */
+.ex.edit{flex-wrap:wrap}
+.ex.edit .exmain{flex:1 1 100%}
+.ex.edit .exbtns{display:flex;gap:5px;margin-top:6px;width:100%}
+.ex.edit .exbtns .altbtn{flex:1;padding:8px 0}
+.ex.edit .exbtns .altbtn[disabled]{opacity:.3}

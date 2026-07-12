@@ -82,8 +82,6 @@ function vRace(v){
    <div class="panel">
      <div class="row"><h2 style="margin:0">RACEPLAN</h2><div class="spacer"></div>
        <span class="tiny dim">${cd!==null && cd>=0 ? cd+' DAGEN' : 'geen datum'}</span></div>
-     <p class="tiny dim" style="margin-top:6px">Hyrox is een looprace met workouts erin. De meeste
-     mensen verliezen hem in de eerste twee runs.</p>
 
      <label style="margin-top:12px">Doeltijd</label>
      <div class="chips" id="goal-pick">
@@ -108,13 +106,12 @@ function vRace(v){
                  <div class="split ${isWeak?'weak':''}"><span>${isWeak?'⚠ ':''}${st.n}</span><span>${mmss(st.sec)}</span></div>`;
        }).join('')}
      </div>
-     <p class="tiny dim" style="margin-top:8px">Run 1 moet bijna gênant rustig voelen. Je slechtste
-     run hoort run 5 of 6 te zijn — stort je in bij run 7-8, dan startte je te snel.</p>
+     <p class="tiny dim" style="margin-top:8px">Run 1 moet gênant rustig voelen.</p>
    </div>
 
    <div class="panel">
      <h2>STATION-PR'S</h2>
-     <p class="tiny dim">Log je beste tijd per station. De app wijst dan je zwakste aan.</p>
+     <p class="tiny dim">Log je beste tijd per station.</p>
      ${weak ? `<div class="warnbox" style="margin-top:10px">ZWAKSTE STATION: ${weak.n} —
        ${Math.round(weak.gap*100)}% boven je doeltempo. Dáár liggen je minuten,
        niet op de runs. Drill dit wekelijks.</div>` :

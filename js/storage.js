@@ -5,15 +5,17 @@
 
 const STORE_KEY  = 'grit2';
 const BACKUP_KEY = 'grit2-backup';
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 /* Zet oude opslag om naar het huidige schema. Draait 1x na een update. */
 function migrate(){
   if(!S) return;
   const v = S.schemaVersion || 1;
-  if(v >= SCHEMA_VERSION){ S.schemaVersion = SCHEMA_VERSION; return; }
 
-  // v1/v2 -> v3: hartslag-module toegevoegd
+  /* Ontbrekende velden ALTIJD aanvullen, niet achter de versiecheck.
+     Fout in v3.x: het versienummer werd niet opgehoogd bij nieuwe velden,
+     waardoor bestaande gebruikers hyroxPR/customEx nooit kregen en de
+     RACE-tab crashte. Idempotent aanvullen is veiliger dan slim zijn. */
   if(!S.hr) S.hr = { maxHR:180, restLog:[], baseline:null };
   if(!S.hr.maxHR)   S.hr.maxHR = 180;
   if(!S.hr.restLog) S.hr.restLog = [];
@@ -21,11 +23,14 @@ function migrate(){
   if(S.anim === undefined) S.anim = 'auto';
   if(!S.customEx)  S.customEx  = {};
   if(!S.hyroxPR)   S.hyroxPR   = {};
-  if(S.lastReview === undefined) S.lastReview = null;   // vast Hyrox-plan nog niet gestart
+  if(S.lastReview === undefined) S.lastReview = null;
+  if(!S.overrides) S.overrides = {};
 
-  S.schemaVersion = SCHEMA_VERSION;
-  save();
-  console.log(`[GRIT] migratie v${v} -> v${SCHEMA_VERSION}`);
+  if(v < SCHEMA_VERSION){
+    S.schemaVersion = SCHEMA_VERSION;
+    save();
+    console.log(`[GRIT] migratie v${v} -> v${SCHEMA_VERSION}`);
+  }
 }
 
 /* Schaduwback-up: bewaart de vorige goede staat onder een 2e sleutel.

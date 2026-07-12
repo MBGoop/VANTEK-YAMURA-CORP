@@ -107,8 +107,7 @@ function vVitals(v){
              <p class="tiny dim">De app genereert je sessies weer zelf.</p>
              <div class="row"><button class="btn small ghost" id="planstop">RESETTEN</button></div>`;
       })() : `<p>Niet gestart.</p>
-             <p class="tiny dim">20 weken, 4 dagen/week. Het plan overschrijft de
-             gegenereerde sessies; buiten het plan valt de app terug op zichzelf.</p>
+             <p class="tiny dim">20 weken, 4 dagen/week.</p>
              <div class="row"><button class="btn" id="planstart">PLAN STARTEN VANDAAG</button></div>`}
    </div>
 

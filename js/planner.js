@@ -98,7 +98,19 @@ function sessionPlan(ds,forceLight){
   const dur=forceLight?Math.max(20,S.dur-15):S.dur;
   const w=buildSession(ses.type,week,dur,taperFactor(ds),absWeek(ds));
   w.meta=ses;
-  /* per-datum oefening-overrides toepassen op de main-set */
+  /* Expliciete lijst (gebruiker heeft de sessie zelf samengesteld) wint altijd.
+     Veel robuuster dan losse rm/swap/add-lagen: wat je ziet is wat er staat. */
+  const ovl=S.overrides[ds];
+  if(ovl && ovl.ex && ovl.ex.list){
+    w.main = ovl.ex.list.map(x =>
+      (x.key==='march'||x.key==='ROND')
+        ? [x.key, x.dose]
+        : [{key:x.key, swapped:!!x.swapped}, x.dose]
+    ).filter(x => x[0]==='march' || x[0]==='ROND' || EX[x[0].key]);
+    w.meta=ses;
+    return w;
+  }
+  /* per-datum oefening-overrides toepassen op de main-set (oud model) */
   const ov=S.overrides[ds];
   if(ov&&ov.ex){
     w.main=w.main.map((it,i)=>{
