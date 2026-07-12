@@ -32,7 +32,8 @@ function vBench(el){
       S.stats.grit+=4;S.stats.speed+=2;
       const pr=sec<oldBest;
       gainXP(pr?60:35,pr?25:12);
-      toast(pr?`!! NIEUW RECORD: ${fmtTime(sec)} !!`:`BENCHMARK: ${fmtTime(sec)} — opgeslagen`);
+      if(pr||!isFinite(oldBest)) celebratePR(sec, oldBest);
+      else toast(`BENCHMARK: ${fmtTime(sec)} — opgeslagen`);
       render('trn');
     }});
   };
@@ -72,7 +73,7 @@ function vAgenda(el){
     const edited=!!S.overrides[ds];
     const isRace=S.race&&S.race.date===ds;
     const mk=ses?({strength:'STR',strengthL:'STR',strengthU:'STR',conditioning:'CND',conditioning2:'CND',mixed:'MIX',circuit:'RUN',mobility:'MOB'})[ses.type]:'';
-    cells+=`<button class="d ${ds===todayStr()?'today':''} ${done?'done':''}" data-d="${ds}">${isRace?'🎯':d}<span class="mk">${done?'[OK]':mk}${quest&&!done?'*':''}${edited?'~':''}</span></button>`;
+    cells+=`<button class="d ${ds===todayStr()?'today':''} ${done?'done':''}" data-d="${ds}" aria-label="${ds}">${isRace?'&#9733;':d}<span class="mk">${done?'[OK]':mk}${quest&&!done?'*':''}${edited?'~':''}</span></button>`;
   }
   el.innerHTML=`
    <div class="panel">
@@ -82,7 +83,7 @@ function vAgenda(el){
        <button class="btn small ghost" id="ag-next">&gt;</button>
      </div>
      <div class="cal" style="margin-top:10px">${cells}</div>
-     <div class="legend"><span>[OK]=GEDAAN</span><span>STR/CND/MIX/RUN/MOB=GEPLAND</span><span>*=QUEST</span><span>~=AANGEPAST</span><span>🎯=WEDSTRIJD</span></div>
+     <div class="legend"><span>[OK]=GEDAAN</span><span>STR/CND/MIX/RUN/MOB=GEPLAND</span><span>*=QUEST</span><span>~=AANGEPAST</span><span>&#9733;=WEDSTRIJD</span></div>
      <p class="tiny dim center" style="margin-top:8px">Tik op een dag om te bewerken (verplaatsen, type, oefeningen, rust).</p>
    </div>
    <div class="panel inv">
@@ -136,11 +137,12 @@ function daySheet(ds){
   const lg=$('#ds-log');  if(lg)  lg.onclick=()=>{o.remove(); logSheet(sessionForDate(ds), ds)};
   const ext=$('#ds-ext'); if(ext) ext.onclick=()=>{o.remove(); externalLogSheet(ds)};
   const un=$('#ds-unlog');if(un)  un.onclick=()=>{
-    if(confirm('Log van deze dag wissen?')){
+    confirmSheet('Log van deze dag wissen? De sessie verdwijnt uit je historiek.',()=>{
       delete S.done[ds];
       S.history=S.history.filter(h=>h.d!==ds);
       save();o.remove();render('trn');
-    }};
+    },{danger:true,yes:'JA, WISSEN'});
+  };
 }
 /* verwijder lege override-objecten */
 function cleanOverride(ds){
@@ -249,9 +251,9 @@ function editSessionSheet(ds){
   o.querySelector('#es-add').onclick  = () => { o.remove(); addPicker(ds) };
   const rs = o.querySelector('#es-reset');
   if(rs) rs.onclick = () => {
-    if(confirm('Terug naar de originele sessie? Je aanpassingen verdwijnen.')){
+    confirmSheet('Terug naar de originele sessie? Je aanpassingen verdwijnen.',()=>{
       delete S.overrides[ds].ex; save(); redo();
-    }
+    },{yes:'JA, HERSTEL'});
   };
   o.querySelector('#es-done').onclick = () => { o.remove(); render('trn') };
 }
@@ -382,6 +384,26 @@ function customExSheet(){
     toast('OEFENING TOEGEVOEGD'); render('bib');
   };
 }
+/* Seizoens-economie: 10-12 CR per sessie x 6 items betekende dat de shop na
+   ~5 weken leeg was, terwijl het 20-wekenplan nog liep. Nieuwe items
+   ontgrendelen op level-mijlpalen en op je eerste benchmark-PR — er is dus
+   altijd een volgende haak op middellange termijn. */
+function itemUnlocked(it){
+  if(!it.unlock) return true;
+  if(it.unlock.lvl) return level()>=it.unlock.lvl;
+  if(it.unlock.pr)  return S.badges.includes('pr');
+  return true;
+}
+function unlockLabel(it){
+  if(it.unlock.lvl) return 'LEVEL '+it.unlock.lvl;
+  if(it.unlock.pr)  return 'PR NODIG';
+  return '?';
+}
+function unlockHint(it){
+  if(it.unlock.lvl) return `VERGRENDELD — bereik level ${it.unlock.lvl} (nu L${level()})`;
+  if(it.unlock.pr)  return 'VERGRENDELD — verbeter je benchmark-record (TRAINING > BENCH)';
+  return 'VERGRENDELD';
+}
 function vCorp(el){
   el.innerHTML=`
    <div class="panel">
@@ -389,11 +411,11 @@ function vCorp(el){
     <p class="tiny dim">Credits verdien je met trainen. Uitrusting = specimen pimpen.</p>
     <div class="shop-grid" style="margin-top:10px">
       ${ITEMS.map((it,i)=>{
-        const owned=S.owned.includes(it.id), eq=S.equipped.includes(it.id);
-        return `<button class="shop-item ${owned?'owned':''} ${eq?'eq':''}" data-id="${it.id}">
-          <canvas id="si${i}"></canvas>
+        const owned=S.owned.includes(it.id), eq=S.equipped.includes(it.id), lk=!itemUnlocked(it);
+        return `<button class="shop-item ${owned?'owned':''} ${eq?'eq':''} ${lk?'locked':''}" data-id="${it.id}" aria-label="${it.name}${lk?' — nog vergrendeld':''}">
+          <canvas id="si${i}" aria-hidden="true"></canvas>
           <div>${it.name}</div>
-          <div class="price">${owned?(eq?'[AAN]':'ZET AAN'):it.price+' CR'}</div>
+          <div class="price">${lk?unlockLabel(it):owned?(eq?'[AAN]':'ZET AAN'):it.price+' CR'}</div>
         </button>`}).join('')}
     </div>
    </div>
@@ -406,12 +428,12 @@ function vCorp(el){
      </div>
    </div>
    <div class="panel">
-     <h2>🎯 MISSIEDOEL (WEDSTRIJD)</h2>
-     ${S.race?`<p class="tiny">${S.race.name} — ${S.race.date}</p><p class="tiny dim" style="margin-top:4px">${(()=>{const d=raceCountdown();return d<0?'Voorbij':'Nog '+d+' dagen — plan tapert automatisch af in de laatste 10 dagen.'})()}</p>
+     <h2>MISSIEDOEL (WEDSTRIJD)</h2>
+     ${S.race&&S.race.date?`<p class="tiny">${S.race.name} — ${S.race.date}</p><p class="tiny dim" style="margin-top:4px">${(()=>{const d=raceCountdown();return d<0?'Voorbij':'Nog '+d+' dagen — plan tapert automatisch af in de laatste 10 dagen.'})()}</p>
         <button class="btn ghost" style="margin-top:10px" id="race-clear">DOEL WISSEN</button>`
        :`<p class="tiny dim">Stel een wedstrijd of einddatum in. De laatste 10 dagen bouwt het plan volume af zodat je fris aan de start staat.</p>
         <label>Naam</label><input type="text" id="race-n" maxlength="16" placeholder="bv. HYROX GENT">
-        <label>Datum</label><input type="text" id="race-d" inputmode="numeric" placeholder="JJJJ-MM-DD">
+        <label for="race-d">Datum</label><input type="date" id="race-d" min="${todayStr()}">
         <button class="btn" style="margin-top:12px" id="race-set">DOEL INSTELLEN</button>`}
    </div>
    <div class="panel inv">
@@ -454,6 +476,7 @@ function vCorp(el){
   ITEMS.forEach((it,i)=>drawPreview($('#si'+i),S.creature.variant,stage(),[it.id]));
   el.querySelectorAll('.shop-item').forEach(b=>b.onclick=()=>{
     const it=ITEMS.find(x=>x.id===b.dataset.id);
+    if(!itemUnlocked(it)){toast(unlockHint(it));return}
     if(!S.owned.includes(it.id)){
       if(S.coins<it.price){toast('ONVOLDOENDE CREDITS — ga trainen');return}
       S.coins-=it.price;S.owned.push(it.id);S.equipped.push(it.id);
@@ -472,11 +495,12 @@ function vCorp(el){
     save();toast('GEWICHT GELOGD');render('crp');
   };
   $('#rename').onclick=()=>{
-    const n=prompt('Nieuwe specimen-naam:',S.creature.name);
-    if(n&&n.trim()){S.creature.name=n.trim().toUpperCase().slice(0,14);save();toast('NAAM BIJGEWERKT');render('crp')}
+    promptSheet('NIEUWE SPECIMEN-NAAM',S.creature.name,n=>{
+      S.creature.name=n.toUpperCase().slice(0,14);save();toast('NAAM BIJGEWERKT');render('crp');
+    });
   };
-  $('#replan').onclick=()=>{if(confirm('Nieuw plan genereren? Je agenda-aanpassingen blijven, maar de cyclus herstart vandaag.')){generatePlan();toast('NIEUW 4-WEEKPLAN GEGENEREERD');TRNSUB='vandaag';render('trn')}};
-  $('#reset').onclick=()=>{if(confirm('Zeker? Specimen, streak en credits verdwijnen definitief.')){localStorage.removeItem('grit2');location.href=location.pathname}};
+  $('#replan').onclick=()=>{confirmSheet('Nieuw plan genereren? Je agenda-aanpassingen blijven, maar de cyclus herstart vandaag.',()=>{generatePlan();toast('NIEUW 4-WEEKPLAN GEGENEREERD');TRNSUB='vandaag';render('trn')},{yes:'GENEREER'})};
+  $('#reset').onclick=()=>{confirmSheet('Dit wist ALLES definitief: specimen, streak, credits, logs en instellingen. Er is geen weg terug — maak eerst een back-up via DATA EXPORTEREN.',()=>{localStorage.removeItem('grit2');location.href=location.pathname},{danger:true,title:'VOLLEDIGE RESET',yes:'WIS ALLES DEFINITIEF'})};
   const rs=$('#race-set');
   if(rs)rs.onclick=()=>{
     const nm=($('#race-n').value.trim()||'WEDSTRIJD').toUpperCase();
@@ -504,12 +528,12 @@ function vCorp(el){
       r.onload=()=>{try{
         const data=JSON.parse(r.result);
         if(!data.creature||!data.stats){toast('ONGELDIG BACK-UP BESTAND');return}
-        if(confirm('Back-up terugzetten? Dit overschrijft je huidige data.')){
+        confirmSheet('Back-up terugzetten? Dit overschrijft je huidige data (er wordt eerst een schaduwkopie gemaakt).',()=>{
           autoBackup();                       /* vangnet vóór overschrijven */
           S=Object.assign(structuredClone(DEFAULT),data);
           migrate();                          /* oude back-up -> huidig schema */
           save();toast('BACK-UP HERSTELD');render('mon');
-        }
+        },{yes:'JA, TERUGZETTEN'});
       }catch(err){toast('KON BESTAND NIET LEZEN')}};
       r.readAsText(f);
     };

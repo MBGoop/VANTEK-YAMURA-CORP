@@ -7,12 +7,8 @@
    inclusief het onaangename oordeel als je te hard traint. */
 'use strict';
 
-function weekKey(ds){
-  const d = new Date(ds || todayStr());
-  const t = new Date(d);
-  t.setDate(d.getDate() - ((d.getDay()+6)%7));      /* maandag van deze week */
-  return t.toISOString().slice(0,10);
-}
+/* weekKey() staat sinds v5 in core.js — planner.js (streak-freeze) en de
+   weekquest hebben hem ook nodig en laden vóór dit bestand. */
 
 function weekStats(){
   const start = new Date(weekKey());
@@ -79,9 +75,18 @@ function reviewSheet(force){
       ${w.hrTrend!==null?` &nbsp;·&nbsp; HR <b style="color:var(--g3b)">${w.hrTrend>0?'+':''}${w.hrTrend}</b>`:''}</p>
     </div>
     ${lines.map(l=>`<p class="tiny" style="margin-top:10px">${l}</p>`).join('')}
-    <button class="btn" style="margin-top:18px" id="rv-ok">BEGREPEN</button>`);
+    <button class="btn" style="margin-top:18px" id="rv-ok">BEGREPEN${S.lastReviewReward!==weekKey()?' — +20 XP':''}</button>`);
   o.querySelector('#rv-ok').onclick = () => {
-    S.lastReview = weekKey(); save(); o.remove();
+    S.lastReview = weekKey();
+    /* Reflectie belonen, niet alleen zweet: 1x per week. Bonus bij >=75%
+       van de geplande sessies — consistentie is het gedrag dat telt. */
+    if(S.lastReviewReward !== weekKey()){
+      S.lastReviewReward = weekKey();
+      const bonus = w.planned>0 && w.done/w.planned>=0.75;
+      gainXP(20, bonus?15:0);
+      toast(bonus?'+20 XP / +15 CR — sterke week':'+20 XP — rapport verwerkt');
+    }
+    save(); o.remove();
   };
   if(!force){ S.lastReview = weekKey(); save(); }
 }
@@ -91,5 +96,11 @@ function maybeReview(){
   if(new Date(todayStr()).getDay() !== 0) return;   /* enkel zondag */
   if(S.lastReview === weekKey()) return;            /* al gezien */
   if(!S.profile) return;
-  setTimeout(()=>reviewSheet(false), 900);
+  setTimeout(()=>{
+    /* Herchecken in de timeout: elke render queuet er een, en snel
+       tab-wisselen mag geen stapel rapporten opleveren. */
+    if(S.lastReview === weekKey()) return;
+    if(document.querySelector('.overlay')) return;  /* nooit over een open sheet heen */
+    reviewSheet(false);
+  }, 900);
 }

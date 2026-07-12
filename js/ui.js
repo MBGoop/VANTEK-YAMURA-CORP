@@ -1,36 +1,72 @@
 /* GRIT — ui.js  (gesplitst uit index.html, gedrag ongewijzigd) */
 /* ---------------- UI HELPERS ---------------- */
-function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)}
+/* Max 1 toast tegelijk (ze stapelden bij log+badge+warning) + aria-live
+   zodat screenreaders feedback ook horen. */
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');t.className='toast';
+  t.setAttribute('role','status');t.setAttribute('aria-live','polite');
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2800);
+}
+/* Sheet = dialoog: role/aria, ESC sluit, focus springt naar de eerste knop. */
 function sheet(html){
   const o=document.createElement('div');o.className='overlay';
-  o.innerHTML=`<div class="sheet">${html}</div>`;
+  o.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
   o.addEventListener('click',e=>{if(e.target===o)o.remove()});
-  document.body.appendChild(o);return o;
+  const esc=e=>{if(e.key==='Escape'){o.remove();document.removeEventListener('keydown',esc)}};
+  document.addEventListener('keydown',esc);
+  document.body.appendChild(o);
+  const f=o.querySelector('button,input,[tabindex]');
+  if(f)setTimeout(()=>f.focus(),50);
+  return o;
 }
-function meter(lab,val){return `<div class="meter"><div class="lab"><span>${lab}</span><span>${Math.round(val)}%</span></div><div class="bar"><div class="fill" style="width:${Math.min(100,val)}%"></div></div></div>`}
+/* Eigen confirm/prompt: native dialogen braken de terminal-illusie en gaven
+   destructieve acties geen eigen gewicht. */
+function confirmSheet(msg,onYes,opts={}){
+  const o=sheet(`<h2 style="font-size:10px">${opts.title||'BEVESTIG'}</h2>
+    <p class="mt1">${msg}</p>
+    <button class="btn ${opts.danger?'danger':''} mt3" id="cf-y">${opts.yes||'JA, DOORGAAN'}</button>
+    <button class="btn ghost mt1" id="cf-n">ANNULEER</button>`);
+  o.querySelector('#cf-y').onclick=()=>{o.remove();onYes()};
+  o.querySelector('#cf-n').onclick=()=>o.remove();
+}
+function promptSheet(msg,val,onOk,maxlen=14){
+  const o=sheet(`<h2 style="font-size:10px">${msg}</h2>
+    <input type="text" id="pr-v" class="mt2" maxlength="${maxlen}" value="${val||''}">
+    <button class="btn mt3" id="pr-ok">OPSLAAN</button>`);
+  const inp=o.querySelector('#pr-v');inp.select();
+  o.querySelector('#pr-ok').onclick=()=>{const v=inp.value.trim();o.remove();if(v)onOk(v)};
+}
+function meter(lab,val){const v=Math.round(val);return `<div class="meter" role="progressbar" aria-label="${lab}" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="100"><div class="lab"><span>${lab}</span><span>${v}%</span></div><div class="bar"><div class="fill" style="width:${Math.min(100,val)}%"></div></div></div>`}
 
 /* =====================================================
    ONBOARDING — CREW INTAKE (idem v2)
 ===================================================== */
 const OB={step:0,data:{pijnzones:[],kbs:[],variant:0}};
 const OB_STEPS=5;
+/* v5: specimen kiezen is stap 1 — eerst de emotionele buy-in (het wezen!),
+   daarna pas het formulier. En je kan terug: elke onboarding-fout die je
+   niet kan corrigeren, verdubbelt de kans op afhaken voor het einde. */
 function renderOnboarding(){
   cancelAnimationFrame(SC.raf);
   APP.innerHTML=`<div id="onb">
     <div class="corp">VANTEK-YAMURA CORP — BUILDING STRONGER BODIES(TM)</div>
     <div class="term-header" style="margin-top:10px">
       <h1>CREW INTAKE</h1>
-      <div class="tiny dim">SPECIMEN GROWTH MONITOR v4.0</div>
+      <div class="tiny dim">SPECIMEN GROWTH MONITOR v5.0</div>
     </div>
     <div class="dots">${Array.from({length:OB_STEPS},(_,i)=>`<span class="${i<=OB.step?'on':''}"></span>`).join('')}</div>
     <div id="obstep"></div>
+    ${OB.step>0?'<button class="btn small ghost mt2" id="ob-back">&lt; TERUG</button>':''}
   </div>`;
-  [obProfile,obParq,obGear,obTime,obCreature][OB.step]($('#obstep'));
+  [obCreature,obProfile,obParq,obGear,obTime][OB.step]($('#obstep'));
+  const bk=$('#ob-back');
+  if(bk)bk.onclick=()=>{OB.step--;renderOnboarding()};
 }
 function obNext(){OB.step++;renderOnboarding()}
 function obProfile(el){
   el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[01] NIVEAU</h2>
+    <h2 style="font-size:10px;margin-bottom:4px">[02] NIVEAU</h2>
     <p class="tiny dim">Dit bepaalt je start-intensiteit. De rest leert de app van je logs.</p>
     <label>Trainingsniveau</label>
     <div class="chips" id="ob-niv">
@@ -52,7 +88,7 @@ function obProfile(el){
 }
 function obParq(el){
   el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[02] VEILIGHEIDSCHECK</h2>
+    <h2 style="font-size:10px;margin-bottom:4px">[03] VEILIGHEIDSCHECK</h2>
     <p class="tiny dim">Eerlijk antwoorden. Dit is GEEN medisch advies.</p>
     <label>Pijn op de borst of duizeligheid bij inspanning?</label>
     <div class="chips" id="ob-red"><button class="chip" data-v="nee">NEE</button><button class="chip" data-v="ja">JA</button></div>
@@ -65,7 +101,9 @@ function obParq(el){
     </div>
     <div id="ob-warn"></div>
     <button class="btn" id="ob-go" style="margin-top:18px">VERDER &gt;</button>`;
-  let red=null;
+  let red=OB.data.parqFlag===true?'ja':OB.data.parqFlag===false?'nee':null;
+  if(red)el.querySelector(`#ob-red .chip[data-v="${red}"]`).classList.add('sel');
+  OB.data.pijnzones.forEach(v=>{const c=el.querySelector(`#ob-pijn .chip[data-v="${v}"]`);if(c)c.classList.add('sel')});
   el.querySelectorAll('#ob-red .chip').forEach(c=>c.onclick=()=>{red=c.dataset.v;el.querySelectorAll('#ob-red .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');
     $('#ob-warn').innerHTML=red==='ja'?`<div class="warnbox">!! Check dit eerst met je huisarts. De monitor blijft bruikbaar, maar alles blijft rustig (low-intensity modus).</div>`:''});
   el.querySelectorAll('#ob-pijn .chip').forEach(c=>c.onclick=()=>{
@@ -79,7 +117,7 @@ function obParq(el){
 }
 function obGear(el){
   el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[03] UITRUSTING</h2>
+    <h2 style="font-size:10px;margin-bottom:4px">[04] UITRUSTING</h2>
     <label>Kettlebells (kg, komma-gescheiden, leeg=geen)</label>
     <input type="text" id="ob-kb" inputmode="numeric" placeholder="bv. 12, 16" value="${OB.data.kbs.join(', ')}">
     <label>Verder in huis:</label>
@@ -96,8 +134,10 @@ function obGear(el){
     </div>
     <p class="tiny dim" style="margin-top:10px">Rugzak+boeken, stoel en handdoek rekenen we standaard mee.</p>
     <button class="btn" id="ob-go" style="margin-top:18px">VERDER &gt;</button>`;
+  [['bands',OB.data.bands],['pullup',OB.data.pullup],['trap',OB.data.trap]].forEach(([v,on])=>{if(on){const c=el.querySelector(`#ob-g2 .chip[data-v="${v}"]`);if(c)c.classList.add('sel')}});
   el.querySelectorAll('#ob-g2 .chip').forEach(c=>c.onclick=()=>c.classList.toggle('sel'));
-  let run=null;
+  let run=OB.data.lopen||null;
+  if(run){const c=el.querySelector(`#ob-run .chip[data-v="${run}"]`);if(c)c.classList.add('sel')}
   el.querySelectorAll('#ob-run .chip').forEach(c=>c.onclick=()=>{run=c.dataset.v;el.querySelectorAll('#ob-run .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')});
   $('#ob-go').onclick=()=>{
     if(!run){toast('Kies een loop-optie');return}
@@ -110,40 +150,48 @@ function obGear(el){
 }
 function obTime(el){
   el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[04] ROOSTER</h2>
+    <h2 style="font-size:10px;margin-bottom:4px">[05] ROOSTER</h2>
     <label>Dagen per week</label>
     <div class="chips" id="ob-d">${[2,3,4,5,6].map(d=>`<button class="chip" data-v="${d}">${d}</button>`).join('')}</div>
     <label>Sessieduur</label>
     <div class="chips" id="ob-t">${[20,30,45,60].map(d=>`<button class="chip" data-v="${d}">${d} MIN</button>`).join('')}</div>
-    <button class="btn" id="ob-go" style="margin-top:18px">VERDER &gt;</button>`;
-  let d=null,t=null;
+    <button class="btn" id="ob-go" style="margin-top:18px">ACTIVEER MONITOR</button>`;
+  let d=OB.data.days||null,t=OB.data.dur||null;
+  if(d)el.querySelector(`#ob-d .chip[data-v="${d}"]`).classList.add('sel');
+  if(t)el.querySelector(`#ob-t .chip[data-v="${t}"]`).classList.add('sel');
   el.querySelectorAll('#ob-d .chip').forEach(c=>c.onclick=()=>{d=+c.dataset.v;el.querySelectorAll('#ob-d .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')});
   el.querySelectorAll('#ob-t .chip').forEach(c=>c.onclick=()=>{t=+c.dataset.v;el.querySelectorAll('#ob-t .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel')});
-  $('#ob-go').onclick=()=>{if(!d||!t){toast('Kies dagen en duur');return}OB.data.days=d;OB.data.dur=t;obNext()};
+  $('#ob-go').onclick=()=>{if(!d||!t){toast('Kies dagen en duur');return}OB.data.days=d;OB.data.dur=t;obFinish()};
 }
 function obCreature(el){
   el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[05] SPECIMEN TOEWIJZEN</h2>
-    <p class="tiny dim">Kies je bio-klasse. Zelfde specimen, ander lab-milieu.</p>
+    <h2 style="font-size:10px;margin-bottom:4px">[01] SPECIMEN TOEWIJZEN</h2>
+    <p class="tiny dim">Dit wezen groeit mee met elke training die je logt. Kies je bio-klasse.</p>
     <div class="pick-variant" id="ob-c">
-      ${[0,1,2].map(i=>`<button data-v="${i}"><canvas id="pc${i}"></canvas>${VARIANT_NAMES[i]}</button>`).join('')}
+      ${[0,1,2].map(i=>`<button data-v="${i}" aria-label="Bio-klasse ${VARIANT_NAMES[i]}"><canvas id="pc${i}" aria-hidden="true"></canvas>${VARIANT_NAMES[i]}</button>`).join('')}
     </div>
-    <label>Specimen-naam</label><input type="text" id="ob-n" maxlength="14" placeholder="bv. GRIT-9">
-    <button class="btn" id="ob-go" style="margin-top:18px">ACTIVEER MONITOR</button>`;
+    <label for="ob-n">Specimen-naam</label><input type="text" id="ob-n" maxlength="14" placeholder="bv. GRIT-9" value="${OB.data.name||''}">
+    <button class="btn" id="ob-go" style="margin-top:18px">VERDER &gt;</button>`;
   [0,1,2].forEach(i=>drawPreview($('#pc'+i),i,1));
-  let sel=0; el.querySelector('#ob-c button').classList.add('sel');
+  let sel=OB.data.variant||0;
+  el.querySelectorAll('#ob-c button')[sel].classList.add('sel');
   el.querySelectorAll('#ob-c button').forEach(b=>b.onclick=()=>{sel=+b.dataset.v;el.querySelectorAll('#ob-c button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel')});
   $('#ob-go').onclick=()=>{
-    const name=($('#ob-n').value.trim()||'SPECIMEN-01').toUpperCase();
-    S.profile={niveau:OB.data.niveau,pijnzones:OB.data.pijnzones,parqFlag:OB.data.parqFlag};
-    S.gear={kbs:OB.data.kbs,bands:OB.data.bands,pullup:OB.data.pullup,trap:OB.data.trap,lopen:OB.data.lopen};
-    S.days=OB.data.days;S.dur=OB.data.dur;
-    S.creature={variant:sel,name};
-    S.bw=OB.data.gewicht?[{d:todayStr(),kg:OB.data.gewicht}]:[];
-    generatePlan();save();
-    toast(`SPECIMEN "${name}" GEACTIVEERD`);
-    render('mon');
+    OB.data.variant=sel;
+    OB.data.name=($('#ob-n').value.trim()||'SPECIMEN-01').toUpperCase();
+    obNext();
   };
+}
+/* De laatste stap (rooster) activeert nu de monitor. */
+function obFinish(){
+  S.profile={niveau:OB.data.niveau,pijnzones:OB.data.pijnzones,parqFlag:OB.data.parqFlag};
+  S.gear={kbs:OB.data.kbs,bands:OB.data.bands,pullup:OB.data.pullup,trap:OB.data.trap,lopen:OB.data.lopen};
+  S.days=OB.data.days;S.dur=OB.data.dur;
+  S.creature={variant:OB.data.variant,name:OB.data.name||'SPECIMEN-01'};
+  S.bw=OB.data.gewicht?[{d:todayStr(),kg:OB.data.gewicht}]:[];
+  generatePlan();save();
+  toast(`SPECIMEN "${S.creature.name}" GEACTIVEERD`);
+  render('mon');
 }
 
 /* =====================================================
@@ -161,12 +209,12 @@ function render(tab){
   const cons=consistency();
   APP.innerHTML=`
    <div class="corp">VANTEK-YAMURA CORP — BUILDING STRONGER BODIES(TM)</div>
-   <div id="hud">
+   <div id="hud" role="button" tabindex="0" aria-label="Statusbalk — tik voor uitleg van de waarden">
      <div class="stat">EN <b>${S.energy}%</b></div>
      <div class="stat">RC <b>${S.recovery}%</b></div>
      <div class="stat">CS <b>${cons}%</b></div>
      <div class="spacer"></div>
-     <div class="stat">STRK <b>${S.streak}</b></div>
+     <div class="stat">STRK <b>${S.streak}</b>${freezeAvailable()?'<span class="frz">+FRZ</span>':''}</div>
      <div class="stat">CR <b>${S.coins}</b></div>
    </div>
    <div id="view" style="padding-top:10px"></div>
@@ -180,8 +228,20 @@ function render(tab){
   /* 'agd' bestaat niet meer als eigen tab: doorverwijzen naar TRAINING > AGENDA */
   if(TAB==='agd'){ TAB='trn'; TRNSUB='agenda'; }
   ({mon:vMonitor,trn:vTrain,vit:vVitals,bib:vBib,crp:vCorp})[TAB]($('#view'));
-  if(S.lastCheckin!==todayStr())setTimeout(checkinSheet,400);
-  else maybeReview();          /* zondag: weekrapport */
+  /* v5: geen check-in-pop-up meer bij elke render (dat was een deurwaarder).
+     De scan is nu een kaart op de MONITOR — zie vMonitor. */
+  const hud=$('#hud');
+  if(hud){hud.onclick=hudSheet;hud.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')hudSheet()}}
+  if(S.lastCheckin===todayStr())maybeReview();   /* zondag: weekrapport */
+}
+/* De HUD-afkortingen waren onverklaard — nieuwe gebruikers gokten. */
+function hudSheet(){
+  sheet(`<h2 style="font-size:10px">STATUSBALK</h2>
+    <div class="block mt2"><h4>EN — ENERGIE</h4><p>Jouw dagvorm uit de dagelijkse scan. Laag = de app maakt je sessie lichter.</p></div>
+    <div class="block"><h4>RC — RECOVERY</h4><p>Hersteld van je vorige belasting? Wordt ook bijgestuurd door je rusthartslag (VITALS).</p></div>
+    <div class="block"><h4>CS — CONSISTENTIE</h4><p>Percentage van je geplande sessies in de laatste 14 dagen dat je effectief deed. De belangrijkste meter van allemaal.</p></div>
+    <div class="block"><h4>STRK — STREAK</h4><p>Actieve dagen op rij. Rustdagen tellen gewoon door. <b>+FRZ</b> = je vangnet staat klaar: mis je tot 5 dagen, dan vangt de freeze dat 1x per week op.</p></div>
+    <div class="block"><h4>CR — CREDITS</h4><p>Verdien je met trainen, uitgeven in het CORP-depot.</p></div>`);
 }
 /* Weekstrip bovenaan: 7 dagen in één oogopslag, tikbaar voor detail. */
 function weekStrip(){
@@ -246,10 +306,16 @@ function vMonitor(el){
   const q=todaysQuest(), qDone=S.quests[todayStr()];
   const lvlPrev=40*Math.pow(level()-1,2);
   const xpPct=Math.min(100,(S.xp-lvlPrev)/(xpForNext()-lvlPrev)*100);
+  const wq=weekQuest(), wqp=Math.min(wq.goal,wq.prog()), wqDone=wqp>=wq.goal, wqClaimed=weekQuestClaimed();
   el.innerHTML=`
    ${weekStrip()}
+   ${S.lastCheckin!==todayStr()?`<div class="panel checkin-card">
+     <div class="row"><h2 style="margin:0">DAGELIJKSE SCAN</h2><div class="spacer"></div><span class="tiny dim">10 SEC</span></div>
+     <p class="tiny mt1">Twee schuiven en de monitor kalibreert je dag: zwaarder, normaal of bewust lichter.</p>
+     <button class="btn mt1" id="ci-open">START SCAN</button>
+   </div>`:''}
    <div id="sceneWrap">
-     <canvas id="scene"></canvas>
+     <canvas id="scene" role="img" aria-label="Je specimen ${S.creature.name}, fase ${stage()} van 3, level ${level()}"></canvas>
      <div class="lvlbar"><span class="tiny">L${level()}</span><div class="bar"><div class="fill" style="width:${xpPct}%"></div></div><span class="tiny">${VARIANT_NAMES[S.creature.variant]}</span></div>
      <div class="nameplate">&#9998; ${S.creature.name}<div class="sub">FASE ${stage()}/3 · ${dominantStat()?('DOMINANT: '+dominantStat().toUpperCase()):'GEEN DATA'}</div></div>
    </div>
@@ -273,25 +339,34 @@ function vMonitor(el){
      <p class="tiny" style="margin-top:6px">${q.t}</p>
      ${qDone?`<p class="tiny dim" style="margin-top:6px">[OK] uitgevoerd</p>`:`<button class="btn ghost" style="margin-top:10px" id="qbtn">MELD UITGEVOERD</button>`}
    </div>
+   <div class="panel inv">
+     <div class="row"><h2 style="margin:0">WEEKQUEST</h2><div class="spacer"></div><span class="tiny dim">+${wq.xp} XP / +${wq.cr} CR</span></div>
+     <p class="tiny" style="margin-top:6px">${wq.t}</p>
+     <div class="wq-bar"><div class="fill" style="width:${wqp/wq.goal*100}%"></div></div>
+     <p class="tiny dim" style="margin-top:4px">${wqClaimed?'[OK] beloning geclaimd':`${wqp}/${wq.goal}`}</p>
+     ${wqDone&&!wqClaimed?'<button class="btn mt1" id="wqbtn">CLAIM BELONING</button>':''}
+   </div>
    ${raceBanner()}
    ${S.badges.length?`<div class="panel">
      <h2>BADGES (${S.badges.length}/${BADGES.length})</h2>
-     <div class="chips">${S.badges.slice(-6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?`<span class="chip sel" style="font-size:7px">🏅 ${b.name}</span>`:''}).join('')}</div>
+     <div class="chips">${S.badges.slice(-6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?`<span class="chip sel" style="font-size:8px">&#9733; ${b.name}</span>`:''}).join('')}</div>
      <button class="btn small ghost" style="margin-top:8px" id="allbadges">ALLE BADGES</button>
    </div>`:''}
    ${TEST?testPanel():''}`;
   mountScene();
+  const ci=$('#ci-open'); if(ci) ci.onclick=checkinSheet;
+  const wqb=$('#wqbtn'); if(wqb) wqb.onclick=()=>{claimWeekQuest();render('mon')};
   const wstr=$('#wstrip'); if(wstr) wstr.onclick=weekSheet;
   const g=$('#gotrain');if(g)g.onclick=()=>{TRNSUB='vandaag';render('trn')};
   const xl=$('#extlog');if(xl)xl.onclick=externalLogSheet;
   const ab=$('#allbadges');if(ab)ab.onclick=badgeSheet;
-  const qb=$('#qbtn');if(qb)qb.onclick=()=>{S.quests[todayStr()]=true;S.lastActive=todayStr();bumpStreakIfNew();gainXP(q.xp,5);checkBadges();toast(`+${q.xp} XP / +5 CR`);render()};
+  const qb=$('#qbtn');if(qb)qb.onclick=()=>{S.quests[todayStr()]=true;S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();gainXP(q.xp,5);checkBadges();toast(`+${q.xp} XP / +5 CR`);render()};
   bindTest();
 }
 function badgeSheet(){
   sheet(`<h2 style="font-size:10px">BADGES — ${S.badges.length}/${BADGES.length}</h2>
     ${BADGES.map(b=>{const got=S.badges.includes(b.id);return `<div class="block" style="${got?'':'opacity:.45'}">
-      <div class="row"><span class="nm" style="color:${got?'var(--g3b)':'var(--g2)'}">${got?'🏅':'🔒'} ${b.name}</span></div>
+      <div class="row"><span class="nm" style="color:${got?'var(--g3b)':'var(--g2b)'}">${got?'&#9733;':'&#9675;'} ${b.name}</span></div>
       <p>${b.desc}</p></div>`}).join('')}`);
 }
 function statPct(k){return Math.min(100,S.stats[k]*2)}
@@ -300,7 +375,7 @@ function raceBanner(){
   if(d===null)return '';
   if(d<0)return `<div class="panel inv"><h2>MISSIE VOLBRACHT</h2><p class="tiny dim">${S.race.name} was op ${S.race.date}. Zet een nieuw doel in CORP.</p></div>`;
   const tap=d<=10?' — TAPER ACTIEF':'';
-  return `<div class="panel"><div class="row"><h2 style="margin:0">🎯 ${S.race.name}</h2><div class="spacer"></div><span class="badge">${d===0?'VANDAAG!':'NOG '+d+' D'}</span></div><p class="tiny dim" style="margin-top:6px">Doeldatum: ${S.race.date}${tap}</p></div>`;
+  return `<div class="panel"><div class="row"><h2 style="margin:0">&#9733; ${S.race.name}</h2><div class="spacer"></div><span class="badge">${d===0?'VANDAAG!':'NOG '+d+' D'}</span></div><p class="tiny dim" style="margin-top:6px">Doeldatum: ${S.race.date}${tap}</p></div>`;
 }
 
 /* ---------------- TRAINING (subtabs: VANDAAG / TIMER / BENCHMARK) ---------------- */
@@ -435,3 +510,67 @@ function renderBlock(title,items,withHints=false){
   }).join('')}</div>`;
 }
 /* rusttimer */
+
+/* =====================================================
+   v5 — CEREMONIE
+   Level-up, mutatie en benchmark-PR waren toasts van 2,8s.
+   Dit zijn de duurste beloningsmomenten van de app: iemand traint
+   wekenlang naar fase 2. Die momenten verdienen een scherm.
+===================================================== */
+function celebrateLevel(l0, st0){
+  /* Nooit stapelen: 2 level-ups kort na elkaar = 1 scherm (het laatste). */
+  document.querySelectorAll('.celebrate').forEach(x=>x.remove());
+  const l1=level(), st1=stage(), mutated=st1>st0;
+  const o=document.createElement('div');
+  o.className='celebrate'+(mutated?' mut':'');
+  o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');
+  o.innerHTML=`<div class="inner">
+    <h2>${mutated?'!! MUTATIE !!':'LEVEL '+l1}</h2>
+    <p class="sub2">${mutated
+      ?`${S.creature.name} evolueert naar <b>FASE ${st1}</b>. Wekenlange input, zichtbaar resultaat.`
+      :`${S.creature.name} groeit. Volgende mutatie op level ${st1===1?4:st1===2?10:'MAX'}.`}</p>
+    <canvas class="ccv" aria-hidden="true"></canvas>
+    <div class="xpwrap"><div class="fill"></div></div>
+    <p class="tiny dim">L${l1} — ${Math.round(S.xp)} XP</p>
+    <button class="btn mt2 cok">DOORGAAN</button>
+  </div>`;
+  document.body.appendChild(o);
+  const cv=o.querySelector('.ccv');
+  if(mutated && !motionOff()){
+    /* oude fase -> flits -> nieuwe fase */
+    drawPreview(cv,S.creature.variant,st0,S.equipped);
+    setTimeout(()=>drawPreview(cv,S.creature.variant,st1,S.equipped),700);
+  }else{
+    drawPreview(cv,S.creature.variant,st1,S.equipped);
+  }
+  const lvlPrev=40*Math.pow(l1-1,2);
+  const pct=Math.min(100,(S.xp-lvlPrev)/(xpForNext()-lvlPrev)*100);
+  setTimeout(()=>{o.querySelector('.xpwrap .fill').style.width=pct+'%'},80);
+  const close=()=>o.remove();
+  o.querySelector('.cok').onclick=close;
+  o.addEventListener('click',e=>{if(e.target===o)close()});
+  setTimeout(()=>o.querySelector('.cok').focus(),100);
+}
+/* Benchmark-PR: tijd + delta t.o.v. je oude record. */
+function celebratePR(sec, oldBest){
+  document.querySelectorAll('.celebrate').forEach(x=>x.remove());
+  const o=document.createElement('div');
+  o.className='celebrate';
+  o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');
+  const diff=isFinite(oldBest)?oldBest-sec:null;
+  o.innerHTML=`<div class="inner">
+    <h2>NIEUW RECORD</h2>
+    <p class="sub2">Benchmark voltooid in</p>
+    <div class="timer" style="margin:6px 0">${fmtTime(sec)}</div>
+    ${diff!==null?`<p class="delta">${fmtTime(diff)} sneller dan je vorige record</p>`
+      :'<p class="delta">Je nulmeting staat. Alles hierna is vooruitgang.</p>'}
+    <canvas class="ccv" aria-hidden="true"></canvas>
+    <button class="btn mt2 cok">DATA VERWERKT</button>
+  </div>`;
+  document.body.appendChild(o);
+  drawPreview(o.querySelector('.ccv'),S.creature.variant,stage(),S.equipped);
+  const close=()=>o.remove();
+  o.querySelector('.cok').onclick=close;
+  o.addEventListener('click',e=>{if(e.target===o)close()});
+  setTimeout(()=>o.querySelector('.cok').focus(),100);
+}

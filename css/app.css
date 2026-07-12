@@ -5,6 +5,8 @@
 ===================================================== */
 :root{
   --g0:#0f2a12; --g1:#2d5a30; --g2:#6fae5c; --g3:#b6d98a; --g3b:#cfe8a9;
+  --g2b:#a8d68f;               /* tekst-op-paneel: 4.9:1 op --g1 (WCAG AA) */
+  --warn:#e8b04a; --danger:#c0483a; --gold:#e8d98a;
   --r:6px;
   --pix:'Press Start 2P','Courier New',monospace;   /* chrome: titels, knoppen, HUD */
   --body:'VT323','Courier New',monospace;            /* leesbare body-tekst */
@@ -29,7 +31,7 @@ p, .body, .ex .hint,
 /* .tiny in body-context ook leesbaar */
 p.tiny, .tiny.body{font-size:calc(14px * var(--fs))}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;
-  background:repeating-linear-gradient(to bottom,rgba(0,0,0,.13) 0 1px,transparent 1px 3px);}
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,.09) 0 1px,transparent 1px 3px);}
 body.comfort::after{display:none}
 #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-bottom:64px}
 .hidden{display:none!important}
@@ -49,12 +51,12 @@ button{font:inherit;cursor:pointer;color:var(--g0);border:none;border-radius:var
 .btn.ghost{background:var(--g1);color:var(--g3);border:2px solid var(--g2);border-bottom-width:4px}
 .btn.small{width:auto;display:inline-block;padding:8px 10px;font-size:8px}
 .btn:disabled{opacity:.4}
-.altbtn{background:var(--g0);color:var(--g3);border:2px solid var(--g2);font-size:7px;padding:4px 6px;border-radius:var(--r)}
+.altbtn{background:var(--g0);color:var(--g3);border:2px solid var(--g2);font-size:8px;padding:8px 10px;min-height:32px;border-radius:var(--r)}
 
 #hud{background:var(--g2);color:var(--g0);padding:6px 10px;font-size:8px;display:flex;flex-wrap:wrap;gap:4px 12px;border-bottom:3px solid var(--g0)}
 #hud b{font-size:8px}
 #hud .stat{display:flex;gap:4px;align-items:center}
-.corp{background:var(--g0);color:var(--g2);text-align:center;font-size:7px;padding:4px 6px;letter-spacing:2px}
+.corp{background:var(--g0);color:var(--g2);text-align:center;font-size:8px;padding:4px 6px;letter-spacing:1px}
 
 #sceneWrap{position:relative;margin:10px;border:4px solid var(--g2);border-radius:var(--r);overflow:hidden;box-shadow:0 4px 0 #081a0a}
 #scene{display:block;width:100%;image-rendering:pixelated;background:var(--g0)}
@@ -62,7 +64,7 @@ button{font:inherit;cursor:pointer;color:var(--g0);border:none;border-radius:var
 .lvlbar .bar{flex:1;height:8px;background:var(--g1);border:2px solid var(--g2)}
 .lvlbar .fill{height:100%;background:var(--g3)}
 .nameplate{background:var(--g1);text-align:center;padding:8px;font-size:12px;color:var(--g3b);border-top:3px solid var(--g2)}
-.nameplate .sub{font-size:7px;color:var(--g2);margin-top:4px;letter-spacing:1px}
+.nameplate .sub{font-size:8px;color:var(--g2b);margin-top:4px;letter-spacing:1px}
 .speech{margin:0 10px 10px;background:var(--g0);border:2px dashed var(--g2);border-radius:var(--r);padding:8px 10px;line-height:1.9;color:var(--g3)}
 .speech::before{content:'> '}
 
@@ -70,11 +72,11 @@ button{font:inherit;cursor:pointer;color:var(--g0);border:none;border-radius:var
 .meter .lab{display:flex;justify-content:space-between;font-size:8px;color:var(--g3);margin-bottom:3px}
 .meter .bar{height:10px;background:var(--g0);border:2px solid var(--g2)}
 .meter .fill{height:100%;background:var(--g3);transition:width .4s steps(8)}
-.badge{display:inline-block;padding:3px 8px;font-size:7px;border:2px solid var(--g3);border-radius:var(--r);text-transform:uppercase}
+.badge{display:inline-block;padding:4px 8px;font-size:8px;border:2px solid var(--g3);border-radius:var(--r);text-transform:uppercase}
 .badge.light{border-style:dashed}
 
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--g1);display:flex;border-top:4px solid var(--g2);z-index:20}
-nav button{flex:1;background:none;color:var(--g2);padding:9px 0 max(9px,env(safe-area-inset-bottom));font-size:7px;border-radius:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button{flex:1;background:none;color:var(--g2b);padding:9px 0 max(9px,env(safe-area-inset-bottom));font-size:8px;border-radius:0;display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button .nic{width:22px;height:22px;image-rendering:pixelated}
 nav button.active{color:var(--g3b);background:var(--g0)}
 
@@ -84,14 +86,14 @@ input[type=text],input[type=number]{
 }
 input.mini{width:64px;padding:6px;font-size:9px;text-align:center}
 input[type=range]{width:100%;accent-color:var(--g3);height:22px}
-label{font-size:8px;color:var(--g2);display:block;margin:12px 0 6px;text-transform:uppercase}
+label{font-size:9px;color:var(--g2b);display:block;margin:12px 0 6px;text-transform:uppercase}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{padding:9px 10px;background:var(--g0);color:var(--g3);border:2px solid var(--g1);border-radius:var(--r);font-size:8px}
 .chip.sel{background:var(--g3);color:var(--g0);border-color:var(--g3b)}
 .warnbox{border:2px solid var(--g3);border-radius:var(--r);padding:10px;line-height:1.9;margin-top:10px;background:var(--g0)}
 
 .block{background:var(--g0);border:2px solid var(--g1);border-radius:var(--r);padding:8px 10px;margin-top:8px}
-.block h4{font-size:8px;color:var(--g2);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+.block h4{font-size:9px;color:var(--g2b);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
 .ex{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:2px dotted var(--g1);font-family:var(--body);font-size:calc(16px * var(--fs));line-height:1.4}
 .ex:last-child{border:none}
 .ex .exmain{flex:1;min-width:0}
@@ -102,19 +104,19 @@ label{font-size:8px;color:var(--g2);display:block;margin:12px 0 6px;text-transfo
 .wday{flex:1;min-width:48px;background:var(--g1);border:2px solid var(--g1);border-radius:var(--r);padding:6px 2px;text-align:center;font-size:8px}
 .wday.today{border-color:var(--g3)}
 .wday.done{background:var(--g2);color:var(--g0)}
-.wday .t{font-size:6px;opacity:.8}
+.wday .t{font-size:7px;opacity:.9}
 .subtabs{display:flex;gap:6px;margin:0 10px 10px}
 .subtabs button{flex:1;padding:9px;font-size:8px;background:var(--g1);color:var(--g3);border:2px solid var(--g2)}
 .subtabs button.on{background:var(--g3);color:var(--g0)}
 
 /* agenda */
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.cal .h{font-size:6px;color:var(--g2);text-align:center;padding:2px 0}
+.cal .h{font-size:7px;color:var(--g2b);text-align:center;padding:2px 0}
 .cal .d{aspect-ratio:1;background:var(--g0);border:2px solid var(--g1);border-radius:4px;font-size:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--g3);gap:1px;padding:0}
 .cal .d.out{opacity:.3}
 .cal .d.today{border-color:var(--g3)}
 .cal .d.done{background:var(--g2);color:var(--g0)}
-.cal .d .mk{font-size:5px;line-height:1}
+.cal .d .mk{font-size:6px;line-height:1}
 .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-family:var(--body);font-size:calc(13px * var(--fs));color:#8fc47a}
 
 /* bib */
@@ -163,10 +165,10 @@ label{font-size:8px;color:var(--g2);display:block;margin:12px 0 6px;text-transfo
 
 /* 6 nav-items i.p.v. 5 (VITALS toegevoegd) — voorkom afkappen op smalle toestellen */
 nav button{min-width:0;letter-spacing:0}
-@media(max-width:360px){ nav button{font-size:6px} }
+@media(max-width:360px){ nav button{font-size:7px} }
 
 /* labelkop binnen een panel (gebruikt door VITALS + plan-kaart) */
-.lbl{font-size:7px;letter-spacing:1px;color:var(--g2);margin-bottom:6px}
+.lbl{font-size:8px;letter-spacing:1px;color:var(--g2b);margin-bottom:6px}
 .card{background:var(--g1);border:3px solid var(--g2);border-radius:var(--r);padding:12px;margin-bottom:10px}
 .card p{margin:3px 0;font-size:9px}
 .card .row{margin-top:10px}
@@ -187,9 +189,9 @@ nav button{min-width:0;letter-spacing:0}
 }
 .dim{color:#a8d68f}                     /* was #8fc47a — te weinig contrast */
 .panel h2{font-size:11px;line-height:1.6}
-.chip{font-size:calc(14px * var(--fs));font-family:var(--body);padding:10px 12px}
+.chip{font-size:calc(14px * var(--fs));font-family:var(--body);padding:10px 12px;min-height:40px}
 .btn{font-size:10px;padding:13px}
-.btn.small{font-size:9px;padding:10px}
+.btn.small{font-size:10px;padding:11px 12px;min-height:40px}
 .speech{font-size:calc(17px * var(--fs));line-height:1.6}
 .card p{font-size:calc(15px * var(--fs));font-family:var(--body);line-height:1.5}
 .lbl{font-size:8px;color:var(--g3b)}
@@ -203,7 +205,7 @@ nav button{min-width:0;letter-spacing:0}
 .wstrip{display:flex;gap:4px;margin:0 10px 10px;cursor:pointer}
 .wstrip .wd{flex:1;text-align:center;padding:6px 2px;background:var(--g1);
   border:2px solid var(--g1);border-radius:var(--r)}
-.wstrip .wd .dw{font-size:7px;color:var(--g2)}
+.wstrip .wd .dw{font-size:7px;color:var(--g2b)}
 .wstrip .wd .st{font-family:var(--body);font-size:14px;color:var(--g3)}
 .wstrip .wd.today{border-color:var(--g3b)}
 .wstrip .wd.done{background:var(--g2)}
@@ -222,3 +224,54 @@ nav button{min-width:0;letter-spacing:0}
 .ex.edit .exbtns{display:flex;gap:5px;margin-top:6px;width:100%}
 .ex.edit .exbtns .altbtn{flex:1;padding:8px 0}
 .ex.edit .exbtns .altbtn[disabled]{opacity:.3}
+
+/* =====================================================
+   v5 — RELEASE POLISH
+   Focus, ceremonie, danger-variant, spacing-utilities,
+   check-in-kaart, vergrendelde shop-items, weekquest.
+===================================================== */
+
+/* Toetsenbord-navigatie: zichtbare focus, past bij de terminal-look */
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--g3b);outline-offset:2px;border-radius:2px}
+
+/* Spacing-utilities: gebruik deze i.p.v. inline margins in nieuw werk */
+.mt1{margin-top:8px}.mt2{margin-top:12px}.mt3{margin-top:16px}
+
+/* Destructieve acties krijgen een eigen gezicht */
+.btn.danger{background:var(--g0);color:var(--danger);border:2px solid var(--danger);border-bottom-width:4px}
+
+/* Dagelijkse scan als uitnodigende kaart i.p.v. pop-up */
+.checkin-card{border-color:var(--g3)}
+.checkin-card .row .btn.small{width:auto}
+
+/* HUD is tikbaar (legende) */
+#hud{cursor:pointer}
+#hud .frz{color:var(--g0);opacity:.85;font-size:8px}
+
+/* Vergrendelde shop-items */
+.shop-item.locked{opacity:.5;border-style:dashed}
+.shop-item.locked .price{color:var(--g2b)}
+.shop-item{font-size:8px;min-height:44px}
+
+/* Weekquest-balk */
+.wq-bar{height:10px;background:var(--g0);border:2px solid var(--g2);margin-top:6px}
+.wq-bar .fill{height:100%;background:var(--g3);transition:width .4s steps(8)}
+
+/* ---- CEREMONIE: level-up / mutatie / PR ---- */
+.celebrate{position:fixed;inset:0;background:rgba(4,12,5,.92);z-index:60;
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.celebrate .inner{background:var(--g1);border:4px solid var(--g3);border-radius:10px;
+  padding:22px 18px;max-width:340px;width:100%;text-align:center;
+  box-shadow:0 6px 0 #081a0a;animation:pop .3s steps(5)}
+@keyframes pop{from{transform:scale(.7)}to{transform:none}}
+.celebrate h2{font-size:13px;color:var(--g3b);letter-spacing:1px;line-height:1.6}
+.celebrate .sub2{font-family:var(--body);font-size:calc(16px * var(--fs));color:var(--g3);margin-top:8px;line-height:1.4}
+.celebrate canvas{width:120px;height:120px;image-rendering:pixelated;margin:14px auto 6px;display:block;
+  border:3px solid var(--g2);border-radius:var(--r);background:var(--g0)}
+.celebrate .xpwrap{height:12px;background:var(--g0);border:2px solid var(--g2);margin:14px 0 4px}
+.celebrate .xpwrap .fill{height:100%;background:var(--g3);width:0%;transition:width 1.1s steps(12)}
+.celebrate .delta{font-family:var(--body);font-size:calc(18px * var(--fs));color:var(--gold);margin-top:6px}
+@keyframes flash{0%,100%{filter:none}50%{filter:brightness(2.2)}}
+.celebrate.mut canvas{animation:flash .5s steps(2) 3}
+@media (prefers-reduced-motion:reduce){.celebrate .inner,.celebrate canvas{animation:none!important}}

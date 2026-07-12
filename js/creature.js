@@ -30,9 +30,35 @@ function drawItems(ox,oy,w,P,eq){
         px(ox-4,oy+(w/2|0),3,7,P[1]); px(ox-3,oy+(w/2|0)-2,1,2,P[3]); break;
       case 'band':
         px(ox+2,oy+2,w-4,2,P[1]); px(ox+3,oy+2,2,2,P[3]); break;
+      case 'jet':
+        px(ox-6,oy+(w/2|0)-2,4,9,P[1]); px(ox-5,oy+(w/2|0)-3,2,1,P[2]);
+        px(ox-5,oy+(w/2|0)+7,2,2,P[3]); break;
+      case 'halo':
+        px(ox+3,oy-5,w-6,1,P[3]); px(ox+2,oy-4,1,1,P[3]); px(ox+w-3,oy-4,1,1,P[3]); break;
+      case 'medal':
+        px(ox+(w/2|0),oy+(w>=20?11:9),1,2,P[1]);
+        px(ox+(w/2|0)-1,oy+(w>=20?13:11),3,3,P[3]); break;
     }
   });
 }
+/* ---- MOOD ----
+   Het wezen reageert nu op je gedrag, niet alleen op XP:
+   happy  = net gelogd (60s venster) -> hogere bob + sparkles
+   sleepy = recovery < 40            -> trage bob, ogen vaker dicht
+   focus  = taper actief (race <10d) -> race-blik, strakke houding
+   Responsiviteit is de kern van het Tamagotchi-effect: jouw actie moet
+   ZICHTBAAR iets veranderen bij het wezen. */
+function mood(){
+  if(!S) return 'ok';
+  if(S.lastLogAt && Date.now()-S.lastLogAt<60000) return 'happy';
+  if(typeof raceCountdown==='function'){
+    const d=raceCountdown();
+    if(d!==null && d>=0 && d<=10) return 'focus';
+  }
+  if(S.recovery<40) return 'sleepy';
+  return 'ok';
+}
+
 /* ---- SPACESHIP INTERIEUR ---- */
 function drawScene(){
   const P=pal(), t=SC.t;
@@ -86,6 +112,12 @@ function drawScene(){
     const fl=(t>>4)%2?P[3]:P[2];
     px(42,116,2,10,P[2]);px(39,118,8,2,fl);px(41,112,4,4,fl);
   }
+  /* CORP-vlag: scene-item bij de cryo-pod */
+  if(S&&S.equipped.includes('flag')){
+    px(116,96,1,32,P[2]);
+    const wv=motionOff()?0:(t>>4)%2;
+    px(117,96+wv,7,4,P[3]);px(117,100+wv,5,2,P[2]);
+  }
   /* == vloer: grating == */
   px(0,H-16,W,16,P[0]);
   for(let x=2;x<W;x+=10)px(x,H-14,6,2,P[1]);
@@ -96,9 +128,12 @@ function drawScene(){
   const st=S?stage():1;
   const grid=SPRITES[st-1];
   const gw=grid[0].length, gh=grid.length;
-  const bob=motionOff()?0:Math.round(Math.sin(t/24)*3);
+  const md=mood();
+  const bobAmp=md==='happy'?5:md==='sleepy'?1.5:3;
+  const bobSpd=md==='happy'?14:md==='sleepy'?40:24;
+  const bob=motionOff()?0:Math.round(Math.sin(t/bobSpd)*bobAmp);
   const gap=S&&S.lastActive?Math.floor((new Date(todayStr())-new Date(S.lastActive))/DAY):0;
-  const blink=gap>=3||((t>>3)%28===0);
+  const blink=gap>=3||md==='sleepy'&&(t>>3)%8<3||((t>>3)%28===0);
   const ox=(W-gw)/2|0, oy=H-26-gh+bob;
   /* anti-grav gloed onder wezen */
   SC.ctx.globalAlpha=.5;
@@ -108,7 +143,17 @@ function drawScene(){
   px(ox+gw/2-3|0,H-24+bob/2,6,8,P[2]);
   SC.ctx.globalAlpha=1;
   drawSprite(grid,ox,oy,P,blink);
-  if(S)drawItems(ox,oy,gw,P,S.equipped);
+  if(S)drawItems(ox,oy,gw,P,S.equipped.filter(i=>i!=='flag'));
+  /* happy: sparkles rond het wezen — de zichtbare beloning direct na loggen */
+  if(md==='happy'&&!motionOff()){
+    [[ox-6,oy+2],[ox+gw+4,oy+6],[ox-4,oy+gh-4],[ox+gw+6,oy-3]].forEach(([sx,sy],i)=>{
+      if(((t>>3)+i)%3!==0)px(sx,sy+((t>>4)%2),1,1,P[3]);
+    });
+  }
+  /* focus: race-glint in de ogen tijdens de taper */
+  if(md==='focus'&&!blink){
+    px(ox+(gw/2|0)-4,oy+(gh>=16?5:4),1,1,P[3]);
+  }
   /* mini-drone companion */
   if(S&&S.equipped.includes('drone')){
     const dx=ox+gw+8, dy=oy+4+(motionOff()?0:Math.round(Math.sin(t/16)*3));
@@ -133,7 +178,7 @@ function drawPreview(cv,variant,st,eq=[]){
   const old=SC.ctx;SC.ctx=ctx;
   ctx.fillStyle=P[1];ctx.fillRect(0,0,40,40);
   drawSprite(grid,(40-gw)/2|0,(40-gh)/2|0,P,false);
-  drawItems((40-gw)/2|0,(40-gh)/2|0,gw,P,eq.filter(i=>i!=='plant'&&i!=='drone'));
+  drawItems((40-gw)/2|0,(40-gh)/2|0,gw,P,eq.filter(i=>i!=='plant'&&i!=='drone'&&i!=='flag'));
   if(eq.includes('drone')){ctx.fillStyle=P[2];ctx.fillRect(32,6,6,4);ctx.fillStyle=P[3];ctx.fillRect(34,4,2,2)}
   if(eq.includes('plant')){ctx.fillStyle=P[2];ctx.fillRect(4,30,2,8);ctx.fillRect(1,34,8,2)}
   SC.ctx=old;

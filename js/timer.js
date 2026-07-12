@@ -186,7 +186,7 @@ function finishEngine(rounds){
   /* benchmark? aparte opslag + PR */
   if(ENG.onFinish){ENG.onFinish(sec,rounds);return}
   /* gewone timer: kleine beloning, telt als activiteit */
-  S.lastActive=todayStr();bumpStreakIfNew();
+  S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();
   S.stats.grit+=2;
   gainXP(15,6);
   toast(`ENGINE KLAAR — ${fmtTime(sec)}${rounds?` / ${rounds} rondes`:''} · +15 XP`);

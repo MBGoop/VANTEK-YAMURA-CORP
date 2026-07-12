@@ -109,6 +109,38 @@
    "id": "band",
    "name": "ZWEETBAND",
    "price": 35
+  },
+  {
+   "id": "jet",
+   "name": "JETPACK",
+   "price": 70,
+   "unlock": {
+    "lvl": 8
+   }
+  },
+  {
+   "id": "halo",
+   "name": "ANTI-GRAV RING",
+   "price": 80,
+   "unlock": {
+    "lvl": 12
+   }
+  },
+  {
+   "id": "flag",
+   "name": "CORP-VLAG",
+   "price": 60,
+   "unlock": {
+    "lvl": 16
+   }
+  },
+  {
+   "id": "medal",
+   "name": "RACE-MEDAILLE",
+   "price": 90,
+   "unlock": {
+    "pr": true
+   }
   }
  ],
  "NAVICONS": {

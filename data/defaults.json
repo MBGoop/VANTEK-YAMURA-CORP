@@ -43,7 +43,7 @@
  "notes": {},
  "badges": [],
  "history": [],
- "schemaVersion": 3,
+ "schemaVersion": 5,
  "hr": {
   "maxHR": 180,
   "restLog": [],
@@ -53,5 +53,9 @@
  "anim": "auto",
  "customEx": {},
  "lastReview": null,
- "hyroxPR": {}
+ "hyroxPR": {},
+ "weekQuestClaimed": null,
+ "lastReviewReward": null,
+ "checkinSnoozed": null,
+ "lastLogAt": 0
 }

@@ -5,7 +5,7 @@
 
 const STORE_KEY  = 'grit2';
 const BACKUP_KEY = 'grit2-backup';
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 /* Zet oude opslag om naar het huidige schema. Draait 1x na een update. */
 function migrate(){
@@ -25,6 +25,11 @@ function migrate(){
   if(!S.hyroxPR)   S.hyroxPR   = {};
   if(S.lastReview === undefined) S.lastReview = null;
   if(!S.overrides) S.overrides = {};
+  /* v5: ceremonie, weekquest, check-in-kaart, review-beloning */
+  if(S.weekQuestClaimed === undefined) S.weekQuestClaimed = null;
+  if(S.lastReviewReward === undefined) S.lastReviewReward = null;
+  if(S.checkinSnoozed  === undefined) S.checkinSnoozed  = null;
+  if(S.lastLogAt       === undefined) S.lastLogAt       = 0;
 
   if(v < SCHEMA_VERSION){
     S.schemaVersion = SCHEMA_VERSION;

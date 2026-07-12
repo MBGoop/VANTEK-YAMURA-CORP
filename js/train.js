@@ -45,7 +45,7 @@ function logSheet(ses, ds){
       </div>`}).join('')}`:'';
   const o=sheet(`
     <h2 style="font-size:10px">PROTOCOL LOGGEN${retro?` — ${ds}`:''}</h2>
-    <label>Hoe zwaar voelde het? (RPE${S.profile.parqFlag?' — hou het onder 6':''})</label>
+    <label for="rpe">Hoe zwaar voelde het? (RPE${S.profile.parqFlag?' — hou het onder 6':''})</label>
     <input type="range" id="rpe" min="1" max="10" value="7">
     <div class="row tiny dim"><span>LICHT</span><div class="spacer"></div><b id="rpev" style="color:var(--g3b)">7</b><div class="spacer"></div><span>MAXIMAAL</span></div>
     ${wtHtml}
@@ -74,6 +74,7 @@ function logSheet(ses, ds){
       }
     });
     S.done[ds]=true;
+    S.lastLogAt=Date.now();       /* wezen viert het meteen (happy-mood) */
     /* streak enkel bijwerken voor vandaag — anders kan je hem achteraf 'kopen' */
     if(!retro){ S.lastActive=ds; bumpStreakIfNew(); }
     const map={strength:'power',strengthL:'power',strengthU:'power',conditioning:'speed',conditioning2:'speed',mixed:'grit',circuit:'grit',mobility:'mobility'};
@@ -147,7 +148,7 @@ function externalLogSheet(ds){
     if(EXTKIND==='gym'){S.stats.power+=3;S.stats.grit+=1;}
     else{S.stats.speed+=3;S.stats.grit+=1;}
     S.rpeLog.push(rpe);S.rpeLog=S.rpeLog.slice(-10);
-    S.done[ds]=true;S.lastActive=todayStr();bumpStreakIfNew();
+    S.done[ds]=true;S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();
     const xp=Math.round(20+dur*0.6), cn=Math.round(10);
     gainXP(xp,cn);
     const label=EXTKIND==='gym'?'GYM / KRACHT':'LOOP';
@@ -166,10 +167,10 @@ function checkinSheet(){
   const o=sheet(`
     <h2 style="font-size:10px">DAGELIJKSE SCAN</h2>
     <p class="tiny dim">Twee metingen, dan kalibreert de monitor je dag.</p>
-    <label>Slaapkwaliteit</label>
+    <label for="ci-s">Slaapkwaliteit</label>
     <input type="range" id="ci-s" min="1" max="5" value="3">
     <div class="row tiny dim"><span>BRAK</span><div class="spacer"></div><span>ALS EEN ROOS</span></div>
-    <label style="margin-top:12px">Algemeen gevoel</label>
+    <label style="margin-top:12px" for="ci-f">Algemeen gevoel</label>
     <input type="range" id="ci-f" min="1" max="5" value="3">
     <div class="row tiny dim"><span>MOE</span><div class="spacer"></div><span>TOPVORM</span></div>
     <button class="btn" style="margin-top:18px" id="ci-go">SCAN VOLTOOIEN</button>`);

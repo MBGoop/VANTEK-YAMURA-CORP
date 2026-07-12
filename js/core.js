@@ -33,6 +33,15 @@ function motionOff(){
   return REDUCED;                 /* 'auto' */
 }
 
+/* Maandag van de week als sleutel — 1 bron van waarheid voor streak-freeze,
+   weekquest en weekrapport. (Verhuisd uit review.js: planner.js laadt eerder.) */
+function weekKey(ds){
+  const d = new Date(ds || todayStr());
+  const t = new Date(d);
+  t.setDate(d.getDate() - ((d.getDay()+6)%7));
+  return t.toISOString().slice(0,10);
+}
+
 /* ---------------- XP / LEVEL ---------------- */
 const level=()=>Math.min(30,Math.floor(Math.sqrt(S.xp/40))+1);
 const xpForNext=()=>40*Math.pow(level(),2);
@@ -41,7 +50,9 @@ function gainXP(x,coins=0){
   const l0=level(), st0=stage();
   S.xp+=x; S.coins+=coins;
   if(level()>l0){
-    toast(stage()>st0?`!! MUTATIE !! ${S.creature.name} evolueert naar fase ${stage()}`:`LEVEL ${level()} — ${S.creature.name} groeit`);
+    /* Ceremonie i.p.v. toast: dit is het duurste beloningsmoment van de app. */
+    if(typeof celebrateLevel==='function') celebrateLevel(l0, st0);
+    else toast(`LEVEL ${level()} — ${S.creature.name} groeit`);
   }
   save();
 }

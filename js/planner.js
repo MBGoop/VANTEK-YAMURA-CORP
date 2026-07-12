@@ -212,20 +212,60 @@ function computeRecovery(sleep,feel){
   S.energy=Math.max(5,Math.min(100,Math.round(sleep*14+feel*8)));
 }
 function dayMode(){return S.recovery<40?'light':S.recovery>=70?'push':'normal'}
+/* Bugfix v5: de freeze werkte op maandbasis (slice(0,8) = 'JJJJ-MM-') en
+   triggerde alleen bij gap===3 exact. Wie de app pas op dag 4 opende,
+   verloor de streak zonder dat de freeze ooit werd ingezet — precies het
+   scenario waarvoor hij bestaat. Nu: echte weeksleutel + venster 3–5 dagen. */
 function updateStreak(){
   if(!S.lastActive)return;
   const gap=Math.floor((new Date(todayStr())-new Date(S.lastActive))/DAY);
-  if(gap===3){
-    const wk=todayStr().slice(0,8);
-    if(S.freezeWeek!==wk){S.freezeWeek=wk;save();toast('STREAK-FREEZE ingezet [1x/week]')}
-    else S.streak=0;
-  }else if(gap>3)S.streak=0;
+  if(gap<3)return;
+  const wk=weekKey();
+  if(gap<=5 && S.freezeWeek!==wk){
+    S.freezeWeek=wk;save();
+    toast('STREAK-FREEZE ingezet — streak gered [1x per week]');
+  }else if(S.streak>0){
+    S.streak=0;save();
+  }
 }
+/* Freeze nog beschikbaar deze week? Zichtbaar vangnet i.p.v. verrassing. */
+function freezeAvailable(){ return S.freezeWeek!==weekKey(); }
 function bumpStreakIfNew(){
   if(S._streakDay!==todayStr()){S.streak++;S._streakDay=todayStr()}
   save();
 }
 function todaysQuest(){const d=new Date(todayStr());return QUESTS[(d.getDate()+d.getMonth())%QUESTS.length]}
+
+/* ---------------- WEEKQUEST ----------------
+   Eén grotere opdracht per week, roteert automatisch. Predicaten horen in
+   code (JSON gooit functies weg) — zelfde redenering als bij BADGES.
+   Doel: de losse modules (VITALS, side-quests, plan) aan de loop koppelen. */
+const WEEKQUESTS=[
+  {id:'hr3',  t:'Meet 3 ochtenden je rusthartslag (VITALS)', goal:3, xp:40, cr:10,
+   prog:()=> (S.hr&&S.hr.restLog?S.hr.restLog.filter(e=>e.d>=weekKey()&&e.d<=todayStr()).length:0)},
+  {id:'ses3', t:'Voltooi 3 sessies deze week',               goal:3, xp:40, cr:10,
+   prog:()=> Object.keys(S.done).filter(d=>d>=weekKey()&&d<=todayStr()).length},
+  {id:'sq2',  t:'Doe 2 side-quests deze week',               goal:2, xp:35, cr:10,
+   prog:()=> Object.keys(S.quests).filter(d=>d>=weekKey()&&d<=todayStr()).length},
+  {id:'note2',t:'Schrijf bij 2 sessies een notitie',         goal:2, xp:30, cr:8,
+   prog:()=> Object.keys(S.notes).filter(d=>d>=weekKey()&&d<=todayStr()).length}
+];
+function isoWeekNum(ds){
+  const d=new Date(ds||todayStr());
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dayNum=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-dayNum+3);
+  const firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4));
+  return 1+Math.round(((t-firstThu)/DAY-3+((firstThu.getUTCDay()+6)%7))/7);
+}
+function weekQuest(){ return WEEKQUESTS[isoWeekNum()%WEEKQUESTS.length] }
+function weekQuestClaimed(){ return S.weekQuestClaimed===weekKey() }
+function claimWeekQuest(){
+  const q=weekQuest();
+  if(weekQuestClaimed()||q.prog()<q.goal)return;
+  S.weekQuestClaimed=weekKey();
+  gainXP(q.xp,q.cr);
+  toast(`WEEKQUEST VOLTOOID — +${q.xp} XP / +${q.cr} CR`);
+}
 
 /* ---------------- BADGES / MIJLPALEN ---------------- */
 /* BADGES bevatten predicaat-functies (b.test) en horen dus in code, niet in JSON:
@@ -246,7 +286,7 @@ function checkBadges(){
   BADGES.forEach(b=>{
     if(!S.badges.includes(b.id)&&b.test()){
       S.badges.push(b.id);save();
-      toast(`🏅 BADGE: ${b.name}`);
+      toast(`★ BADGE: ${b.name}`);
       if(S.cues!==false&&typeof cueDone==='function')cueDone();
     }
   });
