@@ -30,16 +30,12 @@ function applyVisuals(){
   document.documentElement.style.setProperty('--fs', S.fontScale||1);
   document.body.classList.toggle('comfort', !!S.comfort);
 }
-/* animatie uit als comfort AAN of systeem reduced-motion */
-/* Animatie uit? Volgorde: comfort-modus > expliciete keuze > systeeminstelling.
-   Belangrijk: Android zet bij BATTERIJBESPARING prefers-reduced-motion aan.
-   Daardoor stond het figuurtje stil zonder dat je iets had aangeraakt.
-   Met S.anim='aan' overrule je dat. */
+/* Animatie uit enkel als comfort-modus AAN is.
+   Animatie staat nu standaard ALTIJD aan (geen keuze meer).
+   Android's batterijbesparing en reduced-motion negeren we hier — 
+   het wezen is visuele feedback en hoort te bewegen. */
 function motionOff(){
-  if(S&&S.comfort)return true;
-  if(S&&S.anim==='aan')return false;
-  if(S&&S.anim==='uit')return true;
-  return REDUCED;                 /* 'auto' */
+  return S&&S.comfort?true:false;  /* alleen comfort-modus schakelt het uit */
 }
 
 /* Maandag van de week als sleutel — 1 bron van waarheid voor streak-freeze,

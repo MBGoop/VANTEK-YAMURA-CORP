@@ -458,15 +458,11 @@ function vCorp(el){
      <h2>SYSTEEM</h2>
      <button class="btn ghost" id="installapp">INSTALLEER APP OP TOESTEL</button>
      <p class="tiny dim" style="margin-top:8px">Werkt offline zodra geinstalleerd. Op Android: knop hierboven of Chrome-menu > Toevoegen aan startscherm. Op iPhone: deel-knop > Zet op beginscherm.</p>
-     <div class="lbl" style="margin-top:14px">ANIMATIE</div>
+     <div class="lbl" style="margin-top:14px">THEMA</div>
      <label>Thema</label>
      <div class="chips" id="theme-pick">
        ${[['tama','TAMA'],['dmg','GAME BOY'],['bw','ZW/W'],['hyrox','HYROX']].map(([val,lab])=>`<button class="chip ${(S.theme||'tama')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
      </div>
-     <div class="chips" id="anim-pick">
-       ${[['auto','AUTO'],['aan','ALTIJD AAN'],['uit','UIT']].map(([val,lab])=>`<button class="chip ${(S.anim||'aan')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
-     </div>
-     <p class="tiny dim" style="margin-top:6px">AUTO volgt de systeeminstelling "verminder beweging" van je toestel — staat die aan, dan is de scene stil.</p>
      <p class="tiny dim" style="margin-top:6px">Algemene fitness-suggesties, geen medisch advies. Bij pijn of klachten: arts of kinesist. Alle data lokaal (localStorage), geen account, geen cloud.</p>
      <button class="btn ghost" style="margin-top:12px" id="export">DATA EXPORTEREN (BACK-UP)</button>
      <button class="btn ghost" style="margin-top:8px" id="import">BACK-UP IMPORTEREN</button>
@@ -518,7 +514,7 @@ function vCorp(el){
   el.querySelectorAll('#fs-pick .chip').forEach(c=>c.onclick=()=>{S.fontScale=parseFloat(c.dataset.v);save();applyVisuals();render('crp')});
   el.querySelectorAll('#comfort-pick .chip').forEach(c=>c.onclick=()=>{S.comfort=c.dataset.v==='1';save();applyVisuals();render('crp')});
   $('#logboek').onclick=logbookSheet;
-  el.querySelectorAll('#anim-pick .chip').forEach(c=>c.onclick=()=>{S.anim=c.dataset.v;save();render('crp');mountScene()});
+  /* ANIMATIE-keuze verwijderd: animatie staat nu standaard AAN. */
   el.querySelectorAll('#theme-pick .chip').forEach(c=>c.onclick=()=>{S.theme=c.dataset.v;save();applyTheme();render('crp')});
   const ab=$('#allbadges');if(ab)ab.onclick=badgeSheet;
   $('#import').onclick=()=>{
