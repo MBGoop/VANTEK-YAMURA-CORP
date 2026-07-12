@@ -53,7 +53,7 @@ function renderOnboarding(){
     <div class="corp">VANTEK-YAMURA CORP — BUILDING STRONGER BODIES(TM)</div>
     <div class="term-header" style="margin-top:10px">
       <h1>CREW INTAKE</h1>
-      <div class="tiny dim">SPECIMEN GROWTH MONITOR v5.0</div>
+      <div class="tiny dim">SPECIMEN GROWTH MONITOR</div>
     </div>
     <div class="dots">${Array.from({length:OB_STEPS},(_,i)=>`<span class="${i<=OB.step?'on':''}"></span>`).join('')}</div>
     <div id="obstep"></div>
@@ -90,7 +90,7 @@ function obGear(el){
   el.innerHTML=`
     <h2 style="font-size:10px;margin-bottom:4px">[03] UITRUSTING</h2>
     <label>Kettlebells (kg, komma-gescheiden, leeg=geen)</label>
-    <input type="text" id="ob-kb" inputmode="numeric" placeholder="bv. 12, 16" value="${OB.data.kbs.join(', ')}">
+    <input type="text" id="ob-kb" inputmode="numeric" placeholder="bv. 12, 16, 18, 20 ... " value="${OB.data.kbs.join(', ')}">
     <label>Verder in huis:</label>
     <div class="chips" id="ob-g2">
       <button class="chip" data-v="bands">BANDS</button>
@@ -101,9 +101,8 @@ function obGear(el){
     <div class="chips" id="ob-run">
       <button class="chip" data-v="buiten">BUITEN</button>
       <button class="chip" data-v="binnen">BINNEN</button>
-      <button class="chip" data-v="nee">LIEVER NIET</button>
     </div>
-    <p class="tiny dim" style="margin-top:10px">Rugzak+boeken, stoel en handdoek rekenen we standaard mee.</p>
+    <p class="tiny dim" style="margin-top:10px">Rugzak+gewicht, eventuele stoel en handdoek rekenen we standaard mee.</p>
     <button class="btn" id="ob-go" style="margin-top:18px">VERDER &gt;</button>`;
   [['bands',OB.data.bands],['pullup',OB.data.pullup],['trap',OB.data.trap]].forEach(([v,on])=>{if(on){const c=el.querySelector(`#ob-g2 .chip[data-v="${v}"]`);if(c)c.classList.add('sel')}});
   el.querySelectorAll('#ob-g2 .chip').forEach(c=>c.onclick=()=>c.classList.toggle('sel'));
