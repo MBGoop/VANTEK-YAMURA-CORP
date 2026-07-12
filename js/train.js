@@ -45,7 +45,7 @@ function logSheet(ses, ds){
       </div>`}).join('')}`:'';
   const o=sheet(`
     <h2 style="font-size:10px">PROTOCOL LOGGEN${retro?` — ${ds}`:''}</h2>
-    <label for="rpe">Hoe zwaar voelde het? (RPE${S.profile.parqFlag?' — hou het onder 6':''})</label>
+    <label for="rpe">Hoe zwaar voelde het? (RPE)</label>
     <input type="range" id="rpe" min="1" max="10" value="7">
     <div class="row tiny dim"><span>LICHT</span><div class="spacer"></div><b id="rpev" style="color:var(--g3b)">7</b><div class="spacer"></div><span>MAXIMAAL</span></div>
     ${wtHtml}

@@ -15,6 +15,7 @@
 
     const hash = location.hash.replace('#','');
     const tabs = ['mon','trn','agd','vit','bib','crp'];
+    applyTheme();
     render(tabs.includes(hash) ? hash : 'mon');
   }catch(err){
     console.error('[GRIT] boot mislukt:', err);

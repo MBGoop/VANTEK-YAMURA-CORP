@@ -43,19 +43,20 @@
  "notes": {},
  "badges": [],
  "history": [],
- "schemaVersion": 5,
+ "schemaVersion": 6,
  "hr": {
   "maxHR": 180,
   "restLog": [],
   "baseline": null
  },
  "hyroxStart": null,
- "anim": "auto",
+ "anim": "aan",
  "customEx": {},
  "lastReview": null,
  "hyroxPR": {},
  "weekQuestClaimed": null,
  "lastReviewReward": null,
  "checkinSnoozed": null,
- "lastLogAt": 0
+ "lastLogAt": 0,
+ "theme": "tama"
 }

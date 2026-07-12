@@ -42,8 +42,8 @@ function meter(lab,val){const v=Math.round(val);return `<div class="meter" role=
 /* =====================================================
    ONBOARDING — CREW INTAKE (idem v2)
 ===================================================== */
-const OB={step:0,data:{pijnzones:[],kbs:[],variant:0}};
-const OB_STEPS=5;
+const OB={step:0,data:{kbs:[],variant:0}};
+const OB_STEPS=4;
 /* v5: specimen kiezen is stap 1 — eerst de emotionele buy-in (het wezen!),
    daarna pas het formulier. En je kan terug: elke onboarding-fout die je
    niet kan corrigeren, verdubbelt de kans op afhaken voor het einde. */
@@ -59,7 +59,7 @@ function renderOnboarding(){
     <div id="obstep"></div>
     ${OB.step>0?'<button class="btn small ghost mt2" id="ob-back">&lt; TERUG</button>':''}
   </div>`;
-  [obCreature,obProfile,obParq,obGear,obTime][OB.step]($('#obstep'));
+  [obCreature,obProfile,obGear,obTime][OB.step]($('#obstep'));
   const bk=$('#ob-back');
   if(bk)bk.onclick=()=>{OB.step--;renderOnboarding()};
 }
@@ -86,38 +86,9 @@ function obProfile(el){
     obNext();
   };
 }
-function obParq(el){
-  el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[03] VEILIGHEIDSCHECK</h2>
-    <p class="tiny dim">Eerlijk antwoorden. Dit is GEEN medisch advies.</p>
-    <label>Pijn op de borst of duizeligheid bij inspanning?</label>
-    <div class="chips" id="ob-red"><button class="chip" data-v="nee">NEE</button><button class="chip" data-v="ja">JA</button></div>
-    <label>Gevoelige zones (meerdere mogelijk)</label>
-    <div class="chips" id="ob-pijn">
-      <button class="chip" data-v="knie">KNIE</button>
-      <button class="chip" data-v="rug">RUG</button>
-      <button class="chip" data-v="schouder">SCHOUDER</button>
-      <button class="chip" data-v="geen">GEEN</button>
-    </div>
-    <div id="ob-warn"></div>
-    <button class="btn" id="ob-go" style="margin-top:18px">VERDER &gt;</button>`;
-  let red=OB.data.parqFlag===true?'ja':OB.data.parqFlag===false?'nee':null;
-  if(red)el.querySelector(`#ob-red .chip[data-v="${red}"]`).classList.add('sel');
-  OB.data.pijnzones.forEach(v=>{const c=el.querySelector(`#ob-pijn .chip[data-v="${v}"]`);if(c)c.classList.add('sel')});
-  el.querySelectorAll('#ob-red .chip').forEach(c=>c.onclick=()=>{red=c.dataset.v;el.querySelectorAll('#ob-red .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');
-    $('#ob-warn').innerHTML=red==='ja'?`<div class="warnbox">!! Check dit eerst met je huisarts. De monitor blijft bruikbaar, maar alles blijft rustig (low-intensity modus).</div>`:''});
-  el.querySelectorAll('#ob-pijn .chip').forEach(c=>c.onclick=()=>{
-    const v=c.dataset.v;
-    if(v==='geen'){OB.data.pijnzones=[];el.querySelectorAll('#ob-pijn .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');return}
-    el.querySelector('#ob-pijn .chip[data-v=geen]').classList.remove('sel');
-    c.classList.toggle('sel');
-    OB.data.pijnzones=[...el.querySelectorAll('#ob-pijn .chip.sel')].map(x=>x.dataset.v).filter(v=>v!=='geen');
-  });
-  $('#ob-go').onclick=()=>{if(red===null){toast('Beantwoord de eerste vraag');return}OB.data.parqFlag=red==='ja';obNext()};
-}
 function obGear(el){
   el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[04] UITRUSTING</h2>
+    <h2 style="font-size:10px;margin-bottom:4px">[03] UITRUSTING</h2>
     <label>Kettlebells (kg, komma-gescheiden, leeg=geen)</label>
     <input type="text" id="ob-kb" inputmode="numeric" placeholder="bv. 12, 16" value="${OB.data.kbs.join(', ')}">
     <label>Verder in huis:</label>
@@ -150,7 +121,7 @@ function obGear(el){
 }
 function obTime(el){
   el.innerHTML=`
-    <h2 style="font-size:10px;margin-bottom:4px">[05] ROOSTER</h2>
+    <h2 style="font-size:10px;margin-bottom:4px">[04] ROOSTER</h2>
     <label>Dagen per week</label>
     <div class="chips" id="ob-d">${[2,3,4,5,6].map(d=>`<button class="chip" data-v="${d}">${d}</button>`).join('')}</div>
     <label>Sessieduur</label>
@@ -184,7 +155,7 @@ function obCreature(el){
 }
 /* De laatste stap (rooster) activeert nu de monitor. */
 function obFinish(){
-  S.profile={niveau:OB.data.niveau,pijnzones:OB.data.pijnzones,parqFlag:OB.data.parqFlag};
+  S.profile={niveau:OB.data.niveau,pijnzones:[],parqFlag:false};
   S.gear={kbs:OB.data.kbs,bands:OB.data.bands,pullup:OB.data.pullup,trap:OB.data.trap,lopen:OB.data.lopen};
   S.days=OB.data.days;S.dur=OB.data.dur;
   S.creature={variant:OB.data.variant,name:OB.data.name||'SPECIMEN-01'};
@@ -335,23 +306,21 @@ function vMonitor(el){
      <button class="btn ghost" style="margin-top:8px" id="extlog">+ EXTERNE SESSIE REGISTREREN</button>
    </div>
    <div class="panel inv">
-     <div class="row"><h2 style="margin:0">SIDE-QUEST</h2><div class="spacer"></div><span class="tiny dim">+${q.xp} XP</span></div>
-     <p class="tiny" style="margin-top:6px">${q.t}</p>
-     ${qDone?`<p class="tiny dim" style="margin-top:6px">[OK] uitgevoerd</p>`:`<button class="btn ghost" style="margin-top:10px" id="qbtn">MELD UITGEVOERD</button>`}
-   </div>
-   <div class="panel inv">
-     <div class="row"><h2 style="margin:0">WEEKQUEST</h2><div class="spacer"></div><span class="tiny dim">+${wq.xp} XP / +${wq.cr} CR</span></div>
-     <p class="tiny" style="margin-top:6px">${wq.t}</p>
-     <div class="wq-bar"><div class="fill" style="width:${wqp/wq.goal*100}%"></div></div>
-     <p class="tiny dim" style="margin-top:4px">${wqClaimed?'[OK] beloning geclaimd':`${wqp}/${wq.goal}`}</p>
-     ${wqDone&&!wqClaimed?'<button class="btn mt1" id="wqbtn">CLAIM BELONING</button>':''}
+     <h2>MISSIES</h2>
+     <div class="missie">
+       <div class="row"><span class="lbl">VANDAAG</span><div class="spacer"></div><span class="tiny dim">+${q.xp} XP</span></div>
+       <p class="tiny">${q.t}</p>
+       ${qDone?`<p class="tiny dim" style="margin-top:4px">[OK] uitgevoerd</p>`:`<button class="btn small ghost" style="margin-top:8px" id="qbtn">MELD UITGEVOERD</button>`}
+     </div>
+     <div class="missie">
+       <div class="row"><span class="lbl">DEZE WEEK</span><div class="spacer"></div><span class="tiny dim">+${wq.xp} XP / +${wq.cr} CR</span></div>
+       <p class="tiny">${wq.t}</p>
+       <div class="wq-bar"><div class="fill" style="width:${wqp/wq.goal*100}%"></div></div>
+       <p class="tiny dim" style="margin-top:4px">${wqClaimed?'[OK] geclaimd':`${wqp}/${wq.goal}`}</p>
+       ${wqDone&&!wqClaimed?'<button class="btn small mt1" id="wqbtn">CLAIM BELONING</button>':''}
+     </div>
    </div>
    ${raceBanner()}
-   ${S.badges.length?`<div class="panel">
-     <h2>BADGES (${S.badges.length}/${BADGES.length})</h2>
-     <div class="chips">${S.badges.slice(-6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?`<span class="chip sel" style="font-size:8px">&#9733; ${b.name}</span>`:''}).join('')}</div>
-     <button class="btn small ghost" style="margin-top:8px" id="allbadges">ALLE BADGES</button>
-   </div>`:''}
    ${TEST?testPanel():''}`;
   mountScene();
   const ci=$('#ci-open'); if(ci) ci.onclick=checkinSheet;
@@ -359,7 +328,6 @@ function vMonitor(el){
   const wstr=$('#wstrip'); if(wstr) wstr.onclick=weekSheet;
   const g=$('#gotrain');if(g)g.onclick=()=>{TRNSUB='vandaag';render('trn')};
   const xl=$('#extlog');if(xl)xl.onclick=externalLogSheet;
-  const ab=$('#allbadges');if(ab)ab.onclick=badgeSheet;
   const qb=$('#qbtn');if(qb)qb.onclick=()=>{S.quests[todayStr()]=true;S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();gainXP(q.xp,5);checkBadges();toast(`+${q.xp} XP / +5 CR`);render()};
   bindTest();
 }
@@ -432,7 +400,7 @@ function vToday(el){
       ${renderBlock('MAIN SET',w.main,true)}
       ${renderBlock('FINISHER',w.fin)}
       <div class="block"><h4>COOLDOWN</h4><div class="ex"><span>${w.cool[0]}</span></div></div>
-      <div class="row" style="margin-top:10px">
+      <div class="acts">
         <button class="btn small ghost" id="rest60">RUST 60S</button>
         <button class="btn small ghost" id="rest90">RUST 90S</button>
         <button class="btn small ghost" id="opentimer">TIMER</button>
@@ -440,11 +408,9 @@ function vToday(el){
       </div>
       ${note?`<div class="block" style="margin-top:10px"><h4>JOUW NOTITIE</h4><p>${note}</p></div>`:''}
       ${S.done[todayStr()]?`<p class="center tiny" style="margin-top:12px">[OK] vandaag gelogd</p>`:`<button class="btn" style="margin-top:12px" id="logbtn">PROTOCOL LOGGEN</button>`}
-      <p class="tiny dim center" style="margin-top:10px">ALT = pijnvrij alternatief. Aanhoudende pijn: professional raadplegen.</p>
     </div>`;
   }
   el.innerHTML=`<div class="week-strip">${strip}</div>${body}${TEST?testPanel():''}`;
-  bindAlt(el);
   const lb=$('#logbtn');if(lb)lb.onclick=()=>logSheet(ses);
   const r6=$('#rest60'),r9=$('#rest90');
   if(r6)r6.onclick=()=>startRest(60);
@@ -453,32 +419,21 @@ function vToday(el){
   const ot=$('#opentimer');if(ot)ot.onclick=()=>{TRNSUB='timer';render('trn')};
   bindTest();
 }
-function bindAlt(el){
-  el.querySelectorAll('.altbtn').forEach(b=>b.onclick=()=>{
-    const ex=b.closest('.ex,.station');
-    ex.classList.add('swapped');
-    ex.querySelector('.nm').textContent=EX[b.dataset.k].reg;
-    b.remove();
-    toast('ALTERNATIEF GELADEN — rustig opbouwen');
-  });
-}
 /* EEN bron van waarheid voor de naam van een oefening in een sessie.
    Was fout: renderBlock toonde de regressie-TEKST als naam, terwijl de
    bewerk-sheet de originele oefening toonde. Twee namen voor hetzelfde ding. */
 function itemName(a){
   const e = EX[a.key];
-  if(!e) return '?';
-  return a.swapped ? e.reg : e.n;
+  return e ? e.n : '?';
 }
 /* Bij een regressie is het gewichtsadvies onzinnig (bodyweight-variant). */
 function itemUsesWeight(a){
   const e = EX[a.key];
-  return !!(e && e.wt && !a.swapped && has('kb'));
+  return !!(e && e.wt && has('kb'));
 }
 /* De reden dat mensen een trainingsapp openen: wat deed ik vorige keer?
    Progressive overload werkt alleen als je het vorige getal ziet staan. */
 function exHint(key, item){
-  if(item && item.swapped) return '<span class="hint">Aangepast voor je pijnzone — bodyweight.</span>';
   const parts=[];
   const sug=suggestKB(key);
   const last=lastLog(key);
@@ -500,12 +455,10 @@ function renderBlock(title,items,withHints=false){
     if(typeof it==='string')return `<div class="ex"><span>${it}</span></div>`;
     const [a,dose]=it;
     if(a==='march'||a==='ROND'){const e=a==='ROND'?null:EX.march;return `<div class="ex"><span class="nm">${e?e.n:''}</span><div class="spacer"></div><span class="dose">${dose}</span></div>`}
-    const e=EX[a.key];
     const nm=itemName(a);
-    return `<div class="ex ${a.swapped?'swapped':''}">
+    return `<div class="ex">
       <div class="exmain"><span class="nm">${nm}</span>${withHints?exHint(a.key,a):''}</div>
       <span class="dose">${dose}</span>
-      ${e.reg!=='—'&&!a.swapped?`<button class="altbtn" data-k="${a.key}">ALT</button>`:''}
     </div>`;
   }).join('')}</div>`;
 }

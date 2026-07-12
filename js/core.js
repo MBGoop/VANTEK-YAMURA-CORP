@@ -9,6 +9,15 @@ const APP=$('#app');
 const TEST=new URLSearchParams(location.search).has('test');
 const DAY=86400000;
 const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* Thema als data-attribuut op <html>; de CSS-tokens doen de rest.
+   theme-color meta volgt mee zodat de OS-balk klopt in PWA-modus. */
+const THEME_META={tama:'#2e2450',dmg:'#0f2a12',bw:'#181818',hyrox:'#15171c'};
+function applyTheme(){
+  const th=(S&&S.theme)||'tama';
+  document.documentElement.dataset.theme=th;
+  const m=document.querySelector('meta[name=theme-color]');
+  if(m)m.setAttribute('content',THEME_META[th]||THEME_META.tama);
+}
 const todayStr=()=>{const d=new Date(Date.now()+(S?S.dayOffset*DAY:0));return d.toISOString().slice(0,10)};
 const fmtTime=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 

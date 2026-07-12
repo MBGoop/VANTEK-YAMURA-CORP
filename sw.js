@@ -4,7 +4,7 @@
    - DATA (/data/*): network-first met cache als fallback. Zo zie je een
      bijgewerkte exercises.csv meteen, maar blijft de app offline werken.
    Verhoog CACHE bij elke release, anders blijven oude bestanden hangen. */
-const CACHE = 'grit-v5.0.0';
+const CACHE = 'grit-v5.1.0';
 
 const SHELL = [
   './', './index.html',

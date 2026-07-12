@@ -7,7 +7,25 @@
 
 const SC={cv:null,ctx:null,t:0,raf:null,comet:null};
 function px(x,y,w,h,c){SC.ctx.fillStyle=c;SC.ctx.fillRect(x|0,y|0,w,h)}
-function pal(){return PALETTES[S?S.creature.variant:0]}
+/* Scenepalet per thema: dezelfde sprites, ander 'lab-milieu'.
+   tama = speelse kleurvarianten, dmg = originele groenen (uit creature.json),
+   bw = grijstinten, hyrox = neutraal + accent. Zo hertekenen we niets. */
+const THEME_SCENE={
+  tama:[['#3a2e58','#5a4a8c','#9d8ad1','#ffd9f0'],
+        ['#4a2d14','#8a5a24','#d19a4a','#ffe9b0'],
+        ['#1e3a52','#3a6a8c','#6fb3d1','#d9f2ff']],
+  bw:  [['#1c1c1c','#3d3d3d','#8a8a8a','#e8e8e8'],
+        ['#1c1c1c','#3d3d3d','#8a8a8a','#e8e8e8'],
+        ['#1c1c1c','#3d3d3d','#8a8a8a','#e8e8e8']],
+  hyrox:[['#15171c','#2b2f38','#6a7180','#ffd21f'],
+         ['#15171c','#2b2f38','#6a7180','#ffd21f'],
+         ['#15171c','#2b2f38','#6a7180','#ffd21f']]
+};
+function palFor(variant){
+  const th=(S&&S.theme)||'tama';
+  return (THEME_SCENE[th]&&THEME_SCENE[th][variant])||PALETTES[variant];
+}
+function pal(){return palFor(S?S.creature.variant:0)}
 function drawSprite(grid,ox,oy,P,blink){
   grid.forEach((row,y)=>{[...row].forEach((ch,x)=>{
     if(ch==='.')return;
@@ -172,7 +190,7 @@ function mountScene(){
 }
 function drawPreview(cv,variant,st,eq=[]){
   const ctx=cv.getContext('2d');cv.width=40;cv.height=40;
-  const P=PALETTES[variant];
+  const P=palFor(variant);
   const grid=SPRITES[st-1];
   const gw=grid[0].length,gh=grid.length;
   const old=SC.ctx;SC.ctx=ctx;

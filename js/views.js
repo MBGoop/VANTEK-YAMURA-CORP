@@ -191,7 +191,7 @@ function currentList(ds){
   const w = sessionPlan(ds);
   return (w ? w.main : []).map(it =>
     (typeof it[0] === 'object')
-      ? {key:it[0].key, dose:it[1], swapped:!!it[0].swapped}
+      ? {key:it[0].key, dose:it[1]}
       : {key:it[0], dose:it[1]}
   );
 }
@@ -204,7 +204,7 @@ function saveList(ds, list){
 function exLabel(x){
   const e = EX[x.key];
   if(!e) return x.key === 'ROND' ? 'Ronde' : x.key;
-  return x.swapped ? e.reg : e.n;
+  return e.n;
 }
 
 function editSessionSheet(ds){
@@ -222,7 +222,6 @@ function editSessionSheet(ds){
         <button class="altbtn" data-up="${i}" ${i===0?'disabled':''}>&#9650;</button>
         <button class="altbtn" data-dn="${i}" ${i===list.length-1?'disabled':''}>&#9660;</button>
         <button class="altbtn" data-ed="${i}">SET</button>
-        <button class="altbtn" data-sw="${i}">WISSEL</button>
         <button class="altbtn" data-rm="${i}">X</button>
       </div>
     </div>`).join('');
@@ -247,7 +246,6 @@ function editSessionSheet(ds){
     const l = currentList(ds); l.splice(+b.dataset.rm, 1); saveList(ds, l); redo();
   });
   o.querySelectorAll('[data-ed]').forEach(b => b.onclick = () => { o.remove(); doseSheet(ds, +b.dataset.ed) });
-  o.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { o.remove(); swapPicker(ds, +b.dataset.sw) });
   o.querySelector('#es-add').onclick  = () => { o.remove(); addPicker(ds) };
   const rs = o.querySelector('#es-reset');
   if(rs) rs.onclick = () => {
@@ -311,13 +309,6 @@ function exPicker(titel, onPick){
   draw();
 }
 
-function swapPicker(ds, idx){
-  exPicker('VERVANG DOOR', key => {
-    const l = currentList(ds);
-    l[idx] = {key, dose: l[idx] ? l[idx].dose : '3x10'};
-    saveList(ds, l); editSessionSheet(ds);
-  });
-}
 function addPicker(ds){
   exPicker('OEFENING TOEVOEGEN', key => {
     const l = currentList(ds);
@@ -343,7 +334,6 @@ function vBib(el){
          ${sug||last?`<p class="meta">${sug?`Suggestie: ${sug}kg`:''}${sug&&last?' &nbsp;·&nbsp; ':''}${last?`Vorige keer: ${last.w}kg x ${last.r||'?'}`:''}</p>`:''}
          <p>${e.desc}</p>
          <div class="rp">
-           <div><b>Makkelijker:</b> ${e.reg}</div>
            <div style="margin-top:4px"><b>Zwaarder:</b> ${e.prog}</div>
          </div>
        </div>`}).join('')}
@@ -407,6 +397,11 @@ function unlockHint(it){
 function vCorp(el){
   el.innerHTML=`
    <div class="panel">
+     <div class="row"><h2 style="margin:0">BADGES</h2><div class="spacer"></div><span class="tiny dim">${S.badges.length}/${BADGES.length}</span></div>
+     ${S.badges.length?`<div class="chips" style="margin-top:8px">${S.badges.slice(-4).map(id=>{const b=BADGES.find(x=>x.id===id);return b?`<span class="chip sel" style="font-size:9px">&#9733; ${b.name}</span>`:''}).join('')}</div>`:'<p class="tiny dim" style="margin-top:6px">Nog geen badges — je eerste komt vanzelf.</p>'}
+     <button class="btn small ghost" style="margin-top:8px" id="allbadges">ALLE BADGES</button>
+   </div>
+   <div class="panel">
     <h2>CORP DEPOT</h2>
     <p class="tiny dim">Credits verdien je met trainen. Uitrusting = specimen pimpen.</p>
     <div class="shop-grid" style="margin-top:10px">
@@ -441,7 +436,6 @@ function vCorp(el){
      <p class="tiny">NIVEAU: ${S.profile.niveau.toUpperCase()}</p>
      <p class="tiny dim">${S.days} D/WEEK — ${S.dur} MIN/SESSIE</p>
      <p class="tiny dim">MATERIAAL: ${S.gear.kbs.length?'KB '+S.gear.kbs.join('+')+'KG ':''}${S.gear.bands?'/ BANDS ':''}${S.gear.trap?'/ TRAP ':''}${S.gear.pullup?'/ PULL-UP BAR ':''}/ LOPEN: ${S.gear.lopen.toUpperCase()}</p>
-     ${S.profile.pijnzones.length?`<p class="tiny dim">GEVOELIGE ZONES: ${S.profile.pijnzones.join(', ').toUpperCase()} [ALTERNATIEVEN ACTIEF]</p>`:''}
      <button class="btn ghost" style="margin-top:12px" id="rename">SPECIMEN HERNOEMEN</button>
      <button class="btn ghost" style="margin-top:8px" id="replan">PLAN OPNIEUW GENEREREN</button>
      <button class="btn ghost" style="margin-top:8px" id="logboek">LOGBOEK / DAGBOEK</button>
@@ -465,9 +459,14 @@ function vCorp(el){
      <button class="btn ghost" id="installapp">INSTALLEER APP OP TOESTEL</button>
      <p class="tiny dim" style="margin-top:8px">Werkt offline zodra geinstalleerd. Op Android: knop hierboven of Chrome-menu > Toevoegen aan startscherm. Op iPhone: deel-knop > Zet op beginscherm.</p>
      <div class="lbl" style="margin-top:14px">ANIMATIE</div>
-     <div class="chips" id="anim-pick">
-       ${[['auto','AUTO'],['aan','ALTIJD AAN'],['uit','UIT']].map(([val,lab])=>`<button class="chip ${(S.anim||'auto')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
+     <label>Thema</label>
+     <div class="chips" id="theme-pick">
+       ${[['tama','TAMA'],['dmg','GAME BOY'],['bw','ZW/W'],['hyrox','HYROX']].map(([val,lab])=>`<button class="chip ${(S.theme||'tama')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
      </div>
+     <div class="chips" id="anim-pick">
+       ${[['auto','AUTO'],['aan','ALTIJD AAN'],['uit','UIT']].map(([val,lab])=>`<button class="chip ${(S.anim||'aan')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
+     </div>
+     <p class="tiny dim" style="margin-top:6px">AUTO volgt de systeeminstelling "verminder beweging" van je toestel — staat die aan, dan is de scene stil.</p>
      <p class="tiny dim" style="margin-top:6px">Algemene fitness-suggesties, geen medisch advies. Bij pijn of klachten: arts of kinesist. Alle data lokaal (localStorage), geen account, geen cloud.</p>
      <button class="btn ghost" style="margin-top:12px" id="export">DATA EXPORTEREN (BACK-UP)</button>
      <button class="btn ghost" style="margin-top:8px" id="import">BACK-UP IMPORTEREN</button>
@@ -520,6 +519,8 @@ function vCorp(el){
   el.querySelectorAll('#comfort-pick .chip').forEach(c=>c.onclick=()=>{S.comfort=c.dataset.v==='1';save();applyVisuals();render('crp')});
   $('#logboek').onclick=logbookSheet;
   el.querySelectorAll('#anim-pick .chip').forEach(c=>c.onclick=()=>{S.anim=c.dataset.v;save();render('crp');mountScene()});
+  el.querySelectorAll('#theme-pick .chip').forEach(c=>c.onclick=()=>{S.theme=c.dataset.v;save();applyTheme();render('crp')});
+  const ab=$('#allbadges');if(ab)ab.onclick=badgeSheet;
   $('#import').onclick=()=>{
     const inp=document.createElement('input');inp.type='file';inp.accept='application/json,.json';
     inp.onchange=e=>{

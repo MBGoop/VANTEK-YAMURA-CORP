@@ -5,7 +5,7 @@
 
 const STORE_KEY  = 'grit2';
 const BACKUP_KEY = 'grit2-backup';
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 /* Zet oude opslag om naar het huidige schema. Draait 1x na een update. */
 function migrate(){
@@ -30,6 +30,13 @@ function migrate(){
   if(S.lastReviewReward === undefined) S.lastReviewReward = null;
   if(S.checkinSnoozed  === undefined) S.checkinSnoozed  = null;
   if(S.lastLogAt       === undefined) S.lastLogAt       = 0;
+  /* v6: thema + animatie standaard AAN. 'auto' bleek een valkuil: de OS-
+     instelling 'verminder beweging' zette de Tamagotchi onzichtbaar stil.
+     Eenmalige migratie; AUTO blijft beschikbaar als bewuste keuze. */
+  if(S.theme === undefined) S.theme = 'tama';
+  if(S.schemaVersion < 6 && S.anim === 'auto') S.anim = 'aan';
+  /* v6: blessure/alternatief-systeem verwijderd — velden neutraliseren */
+  if(S.profile){ S.profile.pijnzones = []; S.profile.parqFlag = false; }
 
   if(v < SCHEMA_VERSION){
     S.schemaVersion = SCHEMA_VERSION;

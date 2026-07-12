@@ -11,7 +11,7 @@ function pick(keys,rot=0){
   const avail=keys.filter(k=>has(EX[k].need));
   const pool=avail.length?avail:[keys[keys.length-1]];
   const k=pool[((rot%pool.length)+pool.length)%pool.length];
-  return {key:k, swapped:EX[k].zone&&S.profile.pijnzones.includes(EX[k].zone)};
+  return {key:k};
 }
 /* gewichtssuggestie uit eigen KB's */
 function suggestKB(key){
@@ -105,7 +105,7 @@ function sessionPlan(ds,forceLight){
     w.main = ovl.ex.list.map(x =>
       (x.key==='march'||x.key==='ROND')
         ? [x.key, x.dose]
-        : [{key:x.key, swapped:!!x.swapped}, x.dose]
+        : [{key:x.key}, x.dose]
     ).filter(x => x[0]==='march' || x[0]==='ROND' || EX[x[0].key]);
     w.meta=ses;
     return w;
@@ -116,11 +116,11 @@ function sessionPlan(ds,forceLight){
     w.main=w.main.map((it,i)=>{
       if(ov.ex.rm&&ov.ex.rm.includes(i))return null;
       if(ov.ex.swap&&ov.ex.swap[i]&&typeof it[0]==='object'){
-        return [{key:ov.ex.swap[i],swapped:EX[ov.ex.swap[i]].zone&&S.profile.pijnzones.includes(EX[ov.ex.swap[i]].zone)}, it[1]];
+        return [{key:ov.ex.swap[i]}, it[1]];
       }
       return it;
     }).filter(Boolean);
-    if(ov.ex.add)ov.ex.add.forEach(a=>w.main.push([{key:a.key,swapped:false}, a.dose||'3x8']));
+    if(ov.ex.add)ov.ex.add.forEach(a=>w.main.push([{key:a.key}, a.dose||'3x8']));
   }
   return w;
 }
