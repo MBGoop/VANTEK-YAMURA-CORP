@@ -1,0 +1,52 @@
+{
+ "v": 3,
+ "dayOffset": 0,
+ "profile": null,
+ "gear": null,
+ "goals": [],
+ "days": 3,
+ "dur": 30,
+ "creature": {
+  "variant": 0,
+  "name": "SPECIMEN-01"
+ },
+ "xp": 0,
+ "coins": 0,
+ "stats": {
+  "power": 0,
+  "speed": 0,
+  "grit": 0,
+  "mobility": 0
+ },
+ "recovery": 70,
+ "energy": 70,
+ "lastCheckin": null,
+ "rpeLog": [],
+ "streak": 0,
+ "lastActive": null,
+ "freezeWeek": null,
+ "_streakDay": null,
+ "planStart": null,
+ "plan": null,
+ "done": {},
+ "hyroxPRs": [],
+ "quests": {},
+ "owned": [],
+ "equipped": [],
+ "exLog": {},
+ "bw": [],
+ "overrides": {},
+ "race": null,
+ "cues": true,
+ "fontScale": 1,
+ "comfort": false,
+ "notes": {},
+ "badges": [],
+ "history": [],
+ "schemaVersion": 3,
+ "hr": {
+  "maxHR": 180,
+  "restLog": [],
+  "baseline": null
+ }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "GRIT — Specimen Growth Monitor",
+  "short_name": "GRIT",
+  "description": "Hyrox- en krachttrainingstracker met specimen-monitor.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f2a12",
+  "theme_color": "#0f2a12",
+  "lang": "nl",
+  "categories": ["health", "fitness"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Training van vandaag", "url": "./index.html#trn" },
+    { "name": "Ochtendmeting",        "url": "./index.html#vit" }
+  ]
+}

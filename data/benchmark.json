@@ -1,0 +1,26 @@
+{
+ "BENCHMARK": {
+  "name": "VY-STANDAARD BENCHMARK",
+  "rounds": 3,
+  "stations": [
+   {
+    "t": "400 m run OF 2 min traplopen/marcheren"
+   },
+   {
+    "t": "15x KB deadlift of hip hinge"
+   },
+   {
+    "t": "12x squat-to-press"
+   },
+   {
+    "t": "20 m farmer carry (heen+terug)"
+   },
+   {
+    "t": "10x burpee (regressie mag)"
+   },
+   {
+    "t": "20 m handdoek-sled of 10 step-ups"
+   }
+  ]
+ }
+}

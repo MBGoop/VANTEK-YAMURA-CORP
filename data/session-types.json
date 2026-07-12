@@ -1,0 +1,28 @@
+{
+ "ALL_TYPES": [
+  [
+   "strength",
+   "STRENGTH"
+  ],
+  [
+   "strengthU",
+   "STRENGTH UPPER"
+  ],
+  [
+   "conditioning",
+   "CONDITIONING"
+  ],
+  [
+   "mixed",
+   "MIXED"
+  ],
+  [
+   "circuit",
+   "CIRCUIT / RUN"
+  ],
+  [
+   "mobility",
+   "MOBILITY"
+  ]
+ ]
+}

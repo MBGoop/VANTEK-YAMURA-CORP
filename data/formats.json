@@ -1,0 +1,20 @@
+{
+ "FORMATS": {
+  "fortime": {
+   "name": "FOR TIME",
+   "desc": "Race de klok. Voltooi het werk zo snel mogelijk; jij stopt de tijd."
+  },
+  "amrap": {
+   "name": "AMRAP",
+   "desc": "As Many Rounds As Possible. Vaste tijd, tel je rondes."
+  },
+  "emom": {
+   "name": "EMOM",
+   "desc": "Every Minute On the Minute. Start elke minuut een taak, de rest is rust."
+  },
+  "hiit": {
+   "name": "HIIT / TABATA",
+   "desc": "Werk/rust-intervallen met auto-wissel en cues."
+  }
+ }
+}

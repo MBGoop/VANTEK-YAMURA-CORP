@@ -1,0 +1,41 @@
+{
+ "DAYTYPES": {
+  "2": [
+   "mixed",
+   "mixed"
+  ],
+  "3": [
+   "strength",
+   "conditioning",
+   "circuit"
+  ],
+  "4": [
+   "strength",
+   "conditioning",
+   "circuit",
+   "mobility"
+  ],
+  "5": [
+   "strengthL",
+   "conditioning",
+   "strengthU",
+   "mobility",
+   "circuit"
+  ],
+  "6": [
+   "strengthL",
+   "conditioning",
+   "strengthU",
+   "conditioning2",
+   "mobility",
+   "circuit"
+  ]
+ },
+ "CATS": [
+  "ALLE",
+  "STRENGTH",
+  "CONDITIONING",
+  "HYROX",
+  "MOBILITY"
+ ]
+}
