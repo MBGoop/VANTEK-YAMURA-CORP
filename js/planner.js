@@ -204,7 +204,7 @@ function raceCountdown(){
   return d;
 }
 
-/* ---------------- RECOVERY / STREAK / QUESTS ---------------- */
+/* ---------------- RECOVERY / STREAK ---------------- */
 function computeRecovery(sleep,feel){
   const recent=S.rpeLog.slice(-3);
   const rpePen=recent.filter(r=>r>=9).length*12 + (recent.length?Math.max(0,(recent.reduce((a,b)=>a+b,0)/recent.length-7))*6:0);
@@ -237,21 +237,20 @@ function bumpStreakIfNew(){
   if(S._streakDay!==todayStr()){S.streak++;S._streakDay=todayStr()}
   save();
 }
-function todaysQuest(){const d=new Date(todayStr());return QUESTS[(d.getDate()+d.getMonth())%QUESTS.length]}
 
 /* ---------------- WEEKQUEST ----------------
    Eén grotere opdracht per week, roteert automatisch. Predicaten horen in
    code (JSON gooit functies weg) — zelfde redenering als bij BADGES.
-   Doel: de losse modules (VITALS, side-quests, plan) aan de loop koppelen. */
+   Doel: de losse modules (VITALS, plan, notities) aan de loop koppelen. */
 const WEEKQUESTS=[
   {id:'hr3',  t:'Meet 3 ochtenden je rusthartslag (VITALS)', goal:3, xp:40, cr:10,
    prog:()=> (S.hr&&S.hr.restLog?S.hr.restLog.filter(e=>e.d>=weekKey()&&e.d<=todayStr()).length:0)},
   {id:'ses3', t:'Voltooi 3 sessies deze week',               goal:3, xp:40, cr:10,
    prog:()=> Object.keys(S.done).filter(d=>d>=weekKey()&&d<=todayStr()).length},
-  {id:'sq2',  t:'Doe 2 side-quests deze week',               goal:2, xp:35, cr:10,
-   prog:()=> Object.keys(S.quests).filter(d=>d>=weekKey()&&d<=todayStr()).length},
   {id:'note2',t:'Schrijf bij 2 sessies een notitie',         goal:2, xp:30, cr:8,
-   prog:()=> Object.keys(S.notes).filter(d=>d>=weekKey()&&d<=todayStr()).length}
+   prog:()=> Object.keys(S.notes).filter(d=>d>=weekKey()&&d<=todayStr()).length},
+  {id:'ext2', t:'Log 2 externe activiteiten (loop/fiets/wandel)', goal:2, xp:35, cr:10,
+   prog:()=> (S.history||[]).filter(h=>h.d>=weekKey()&&h.d<=todayStr()&&h.type&&h.type.startsWith('ext_')).length}
 ];
 function isoWeekNum(ds){
   const d=new Date(ds||todayStr());
@@ -272,7 +271,7 @@ function claimWeekQuest(){
 
 /* ---------------- BADGES / MIJLPALEN ---------------- */
 /* BADGES bevatten predicaat-functies (b.test) en horen dus in code, niet in JSON:
-   JSON.stringify gooit functies stilzwijgend weg. Alleen QUESTS staat in data. */
+   JSON.stringify gooit functies stilzwijgend weg. */
 const BADGES=[
   {id:'first',   name:'EERSTE CONTACT',  desc:'Je eerste sessie gelogd',            test:()=>S.history.length>=1},
   {id:'ten',     name:'TIEN MISSIES',     desc:'10 sessies voltooid',                test:()=>S.history.length>=10},

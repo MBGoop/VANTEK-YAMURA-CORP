@@ -7,7 +7,6 @@ const DATA_FILES = {
   defaults : 'data/defaults.json',
   creature : 'data/creature.json',
   daytypes : 'data/daytypes.json',
-  gamif    : 'data/gamification.json',
   formats  : 'data/formats.json',
   bench    : 'data/benchmark.json',
   types    : 'data/session-types.json'
@@ -68,7 +67,6 @@ async function loadData(){
   window.NAVICONS      = D.creature.NAVICONS;
   window.DAYTYPES      = D.daytypes.DAYTYPES;
   window.CATS          = D.daytypes.CATS;
-  window.QUESTS        = D.gamif.QUESTS;
   window.FORMATS       = D.formats.FORMATS;
   window.BENCHMARK     = D.bench.BENCHMARK;
   window.ALL_TYPES     = D.types.ALL_TYPES;

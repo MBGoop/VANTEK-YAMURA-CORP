@@ -278,7 +278,6 @@ function vMonitor(el){
   const ses=sessionForDate(todayStr());
   const done=S.done[todayStr()];
   const mode=dayMode();
-  const q=todaysQuest(), qDone=S.quests[todayStr()];
   const lvlPrev=40*Math.pow(level()-1,2);
   const xpPct=Math.min(100,(S.xp-lvlPrev)/(xpForNext()-lvlPrev)*100);
   const wq=weekQuest(), wqp=Math.min(wq.goal,wq.prog()), wqDone=wqp>=wq.goal, wqClaimed=weekQuestClaimed();
@@ -310,12 +309,7 @@ function vMonitor(el){
      <button class="btn ghost" style="margin-top:8px" id="extlog">+ ACTIVITEIT TOEVOEGEN</button>
    </div>
    <div class="panel inv">
-     <h2>MISSIES</h2>
-     <div class="missie">
-       <div class="row"><span class="lbl">VANDAAG</span><div class="spacer"></div><span class="tiny dim">+${q.xp} XP</span></div>
-       <p class="tiny">${q.t}</p>
-       ${qDone?`<p class="tiny dim" style="margin-top:4px">[OK] uitgevoerd</p>`:`<button class="btn small ghost" style="margin-top:8px" id="qbtn">MELD UITGEVOERD</button>`}
-     </div>
+     <h2>WEEKQUEST</h2>
      <div class="missie">
        <div class="row"><span class="lbl">DEZE WEEK</span><div class="spacer"></div><span class="tiny dim">+${wq.xp} XP / +${wq.cr} CR</span></div>
        <p class="tiny">${wq.t}</p>
@@ -332,7 +326,6 @@ function vMonitor(el){
   const wstr=$('#wstrip'); if(wstr) wstr.onclick=weekSheet;
   const g=$('#gotrain');if(g)g.onclick=()=>{TRNSUB='vandaag';render('trn')};
   const xl=$('#extlog');if(xl)xl.onclick=externalLogSheet;
-  const qb=$('#qbtn');if(qb)qb.onclick=()=>{S.quests[todayStr()]=true;S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();gainXP(q.xp,5);checkBadges();toast(`+${q.xp} XP / +5 CR`);render()};
   bindTest();
 }
 function badgeSheet(){
@@ -381,7 +374,7 @@ function vToday(el){
   const ses=sessionForDate(todayStr());
   const mode=dayMode();
   let body='';
-  if(!ses){body=`<div class="panel center"><p class="tiny">RUSTDAG GEPROGRAMMEERD.</p><p class="tiny dim" style="margin-top:6px">Zin in iets kleins? Side-quest op de monitor telt mee.</p>
+  if(!ses){body=`<div class="panel center"><p class="tiny">RUSTDAG GEPROGRAMMEERD.</p><p class="tiny dim" style="margin-top:6px">Herstel is ook data. Toch iets gedaan? Registreer het hieronder — het telt volwaardig mee.</p>
     <button class="btn ghost mt2" id="quickadd">+ ACTIVITEIT TOEVOEGEN</button></div>`}
   else{
     const w=sessionPlan(todayStr(), mode==='light');

@@ -78,11 +78,11 @@ function vAgenda(el){
   for(let d=1;d<=daysInM;d++){
     const ds=`${view.getFullYear()}-${String(view.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const ses=sessionForDate(ds);
-    const done=S.done[ds], quest=S.quests[ds];
+    const done=S.done[ds];
     const edited=!!S.overrides[ds];
     const isRace=S.race&&S.race.date===ds;
     const mk=ses?({strength:'STR',strengthL:'STR',strengthU:'STR',conditioning:'CND',conditioning2:'CND',mixed:'MIX',circuit:'RUN',mobility:'MOB'})[ses.type]:'';
-    cells+=`<button class="d ${ds===todayStr()?'today':''} ${done?'done':''}" data-d="${ds}" aria-label="${ds}">${isRace?'&#9733;':d}<span class="mk">${done?'[OK]':mk}${quest&&!done?'*':''}${edited?'~':''}</span></button>`;
+    cells+=`<button class="d ${ds===todayStr()?'today':''} ${done?'done':''}" data-d="${ds}" aria-label="${ds}">${isRace?'&#9733;':d}<span class="mk">${done?'[OK]':mk}${edited?'~':''}</span></button>`;
   }
   el.innerHTML=`
    <div class="panel">
@@ -92,7 +92,7 @@ function vAgenda(el){
        <button class="btn small ghost" id="ag-next">&gt;</button>
      </div>
      <div class="cal" style="margin-top:10px">${cells}</div>
-     <div class="legend"><span>[OK]=GEDAAN</span><span>STR/CND/MIX/RUN/MOB=GEPLAND</span><span>*=QUEST</span><span>~=AANGEPAST</span><span>&#9733;=WEDSTRIJD</span></div>
+     <div class="legend"><span>[OK]=GEDAAN</span><span>STR/CND/MIX/RUN/MOB=GEPLAND</span><span>~=AANGEPAST</span><span>&#9733;=WEDSTRIJD</span></div>
      <p class="tiny dim center" style="margin-top:8px">Tik op een dag om te bewerken (verplaatsen, type, oefeningen, rust).</p>
    </div>
    <div class="panel inv">
@@ -651,7 +651,7 @@ function bindTest(){
    XP-BOEKHOUDING — transparantie is de prijs van verval.
    Wie punten kan verliezen, moet exact kunnen zien waarom.
 ===================================================== */
-const LEDGER_LABEL={sessie:'Sessie gelogd',extern:'Externe activiteit',quest:'Side-quest',
+const LEDGER_LABEL={sessie:'Sessie gelogd',extern:'Externe activiteit',
   weekquest:'Weekquest',review:'Weekrapport',benchmark:'Benchmark',
   'benchmark-afgebroken':'Benchmark afgebroken',timer:'Timer',
   'timer-afgebroken':'Timer afgebroken',verval:'Verval (inactief)',

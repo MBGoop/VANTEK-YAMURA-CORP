@@ -1,0 +1,31 @@
+import { JSDOM } from 'jsdom'; import fs from 'fs'; import path from 'path';
+const ROOT='/home/claude/v6';
+const dom=new JSDOM(`<!DOCTYPE html><html><head><meta name="theme-color" content="#2e2450"></head><body><div id="app"></div></body></html>`,{runScripts:'dangerously',pretendToBeVisual:true,url:'https://x.test/'});
+const w=dom.window,d=w.document;
+const fetched=[];
+w.fetch=async u=>{fetched.push(String(u));const t=fs.readFileSync(path.join(ROOT,String(u)),'utf8');return{ok:true,status:200,text:async()=>t,json:async()=>JSON.parse(t)}};
+w.matchMedia=()=>({matches:false,addEventListener(){}});
+w.structuredClone=o=>JSON.parse(JSON.stringify(o));
+w.requestAnimationFrame=()=>1;w.cancelAnimationFrame=()=>{};
+w.HTMLCanvasElement.prototype.getContext=()=>new Proxy({},{get:(t,p)=>p==='globalAlpha'?1:()=>{},set:()=>true});
+const T=new Date().toISOString().slice(0,10);
+const st={grit2:JSON.stringify({schemaVersion:7,profile:{niveau:'gemiddeld',pijnzones:[],parqFlag:false},gear:{kbs:[16],bands:true,trap:false,pullup:false,lopen:'buiten'},creature:{variant:0,name:'MICH'},stats:{power:0,speed:0,grit:0,mobility:0},done:{},quests:{'2026-07-01':true},overrides:{},notes:{},exLog:{},history:[],rpeLog:[],badges:[],xp:200,coins:30,streak:3,energy:70,recovery:70,days:4,dur:45,equipped:[],owned:[],hyroxPRs:[],bw:[],race:null,plan:null,planStart:null,dayOffset:0,lastCheckin:T,lastActive:T,fontScale:1,comfort:false,theme:'tama',ledger:[],decayCharged:0,decayPot:0,weekQuestClaimed:null,lastReviewReward:T,lastReview:T,lastLogAt:0,hr:{maxHR:180,restLog:[],baseline:null}})};
+Object.defineProperty(w,'localStorage',{value:{getItem:k=>st[k]??null,setItem:(k,v)=>st[k]=String(v),removeItem:k=>delete st[k]}});
+w.AudioContext=function(){return{}};w.navigator.wakeLock={request:async()=>({release(){}})};
+const errs=[];w.addEventListener('error',e=>errs.push(e.error?.message||e.message));
+for(const f of ['data','core','storage','creature','planner','ui','train','timer','hr','race','review','views','pwa','boot'])
+ {const s=d.createElement('script');s.textContent=fs.readFileSync(path.join(ROOT,'js',f+'.js'),'utf8');d.body.appendChild(s);}
+await new Promise(r=>setTimeout(r,400));
+const P=(l,v)=>console.log(l.padEnd(36)+': '+v);
+P('gamification.json nog opgehaald?', fetched.some(f=>f.includes('gamification'))?'FOUT — nog gefetcht':'OK — niet meer geladen');
+P('QUESTS bestaat nog?', (typeof w.QUESTS!=='undefined')?'FOUT':'OK — weg');
+P('todaysQuest bestaat nog?', (typeof w.todaysQuest!=='undefined')?'FOUT':'OK — weg');
+w.render('mon');
+P('side-quest op monitor?', d.body.innerHTML.includes('MELD UITGEVOERD')?'FOUT — staat er nog':'OK — weg');
+P('weekquest-paneel', d.body.innerHTML.includes('WEEKQUEST')?'OK — blijft':'FOUT');
+P('actieve weekquest', w.eval('weekQuest().t'));
+P('aantal weekquests', w.eval('WEEKQUESTS.length'));
+w.eval("TRNSUB='agenda'");w.render('trn');
+P('quest-marker (*) uit agenda', d.body.innerHTML.includes('*=QUEST')?'FOUT':'OK — legende opgeruimd');
+P('oude S.quests-data behouden', Object.keys(w.eval('S.quests')).length+' (mag blijven staan, groeit niet meer)');
+console.log('\nfouten: '+(errs.length?errs.join(' | '):'geen'));

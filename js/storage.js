@@ -5,7 +5,7 @@
 
 const STORE_KEY  = 'grit2';
 const BACKUP_KEY = 'grit2-backup';
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 /* Zet oude opslag om naar het huidige schema. Draait 1x na een update. */
 function migrate(){
@@ -39,6 +39,11 @@ function migrate(){
      teruggedraaid. Dat melden we eerlijk in de wis-bevestiging i.p.v. te
      doen alsof het exact is. */
   if(!S.ledger) S.ledger = [];
+  /* v8: dagelijkse side-quests verwijderd. De oude S.quests-data laten we
+     staan (schaadt niet, kost niets) maar er wordt niets meer aan toegevoegd.
+     De weekquest blijft: die is gebouwd op je echte trainingsdata, niet op
+     losse tekstjes. */
+  if(!S.quests) S.quests = {};
   if(S.decayCharged === undefined) S.decayCharged = 0;
   if(S.decayPot === undefined) S.decayPot = 0;
   if(S.schemaVersion < 6 && S.anim === 'auto') S.anim = 'aan';
