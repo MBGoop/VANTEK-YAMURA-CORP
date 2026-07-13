@@ -78,10 +78,11 @@ function logSheet(ses, ds){
     /* streak enkel bijwerken voor vandaag — anders kan je hem achteraf 'kopen' */
     if(!retro){ S.lastActive=ds; bumpStreakIfNew(); }
     const map={strength:'power',strengthL:'power',strengthU:'power',conditioning:'speed',conditioning2:'speed',mixed:'grit',circuit:'grit',mobility:'mobility'};
-    S.stats[map[ses.type]]+=Math.round(3*frac);
+    const dSt={[map[ses.type]]:Math.round(3*frac), grit:1};
+    S.stats[map[ses.type]]+=dSt[map[ses.type]];
     S.stats.grit+=1;
     const xp=Math.round((20+S.dur*0.6)*frac), cn=Math.round(10*frac);
-    gainXP(xp,cn);
+    gainXP(xp,cn,'sessie','ses:'+ds,dSt);
     /* historie loggen */
     S.history.push({d:ds,type:ses.type,rpe,frac,xp});
     S.history.sort((a,b)=>a.d<b.d?-1:1);
@@ -95,6 +96,23 @@ function logSheet(ses, ds){
 
 /* ---------------- EXTERNE SESSIE (buiten de app getraind) ---------------- */
 let EXTKIND='gym';
+/* XP-curve voor externe activiteit: lineair naar duur, maar met een
+   afvlakking. Zo is 'even 5 min wandelen' geen goudmijn en blijft een
+   uur fietsen volwaardige training. */
+const EXT_TYPES={
+  gym:  {lab:'KRACHT / GYM', st:'power',    f:1.0},
+  run:  {lab:'LOPEN',        st:'speed',    f:1.0},
+  walk: {lab:'WANDELEN',     st:'mobility', f:0.5},
+  bike: {lab:'FIETSEN',      st:'speed',    f:0.8},
+  other:{lab:'ANDERS',       st:'grit',     f:0.8}
+};
+function extXP(kind,dur,rpe){
+  const T=EXT_TYPES[kind]||EXT_TYPES.other;
+  const basis=10+Math.min(dur,90)*0.55;          /* afgevlakt boven 90 min */
+  const intens=0.85+(rpe/10)*0.3;                /* RPE weegt licht mee */
+  const xp=Math.round(basis*T.f*intens);
+  return {xp, cn:Math.max(3,Math.round(xp*0.45)), T};
+}
 function externalLogSheet(ds){
   ds = ds || todayStr();
   EXTKIND='gym';
@@ -103,8 +121,7 @@ function externalLogSheet(ds){
     <p class="tiny dim">Getraind buiten de app? Registreer het hier. Telt mee voor streak, XP en stats.</p>
     <label>Soort</label>
     <div class="chips" id="ext-kind">
-      <button class="chip sel" data-v="gym">KRACHT / GYM</button>
-      <button class="chip" data-v="run">LOOP</button>
+      ${Object.entries(EXT_TYPES).map(([k,v])=>`<button class="chip ${k==='gym'?'sel':''}" data-v="${k}">${v.lab}</button>`).join('')}
     </div>
     <div id="ext-fields"></div>
     <label style="margin-top:14px">Hoe zwaar voelde het? (RPE)</label>
@@ -115,7 +132,7 @@ function externalLogSheet(ds){
     <button class="btn" style="margin-top:18px" id="ext-go">REGISTREREN</button>`);
   const renderFields=()=>{
     const box=o.querySelector('#ext-fields');
-    if(EXTKIND==='gym'){
+    if(EXTKIND==='gym'||EXTKIND==='other'){
       box.innerHTML=`<label style="margin-top:14px">Duur (min)</label><input class="mini" type="number" inputmode="numeric" id="ext-dur" value="45" style="width:auto">`;
     }else{
       box.innerHTML=`
@@ -143,20 +160,18 @@ function externalLogSheet(ds){
     const dur=parseInt((o.querySelector('#ext-dur')||{}).value)||30;
     const note=o.querySelector('#ext-note').value.trim();
     let extra='',km=null;
-    if(EXTKIND==='run'){km=parseFloat((o.querySelector('#ext-km')||{}).value)||null;if(km)extra=` ${km}km`}
-    /* stats: gym -> power/grit, run -> speed/endurance(grit) */
-    if(EXTKIND==='gym'){S.stats.power+=3;S.stats.grit+=1;}
-    else{S.stats.speed+=3;S.stats.grit+=1;}
+    if(EXTKIND!=='gym'&&EXTKIND!=='other'){km=parseFloat((o.querySelector('#ext-km')||{}).value)||null;if(km)extra=` ${km}km`}
+    const {xp,cn,T}=extXP(EXTKIND,dur,rpe);
+    const dSt={[T.st]:3, grit:1};
+    S.stats[T.st]=(S.stats[T.st]||0)+3; S.stats.grit+=1;
     S.rpeLog.push(rpe);S.rpeLog=S.rpeLog.slice(-10);
     S.done[ds]=true;S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();
-    const xp=Math.round(20+dur*0.6), cn=Math.round(10);
-    gainXP(xp,cn);
-    const label=EXTKIND==='gym'?'GYM / KRACHT':'LOOP';
-    const fullNote=(note?note:'')+(EXTKIND==='run'&&km?` (${km}km, ${dur}min)`:'');
-    if(fullNote)S.notes[todayStr()]=fullNote;
+    gainXP(xp,cn,'extern','ses:'+ds,dSt);
+    const fullNote=(note?note:'')+(km?` (${km}km, ${dur}min)`:` (${dur}min)`);
+    if(fullNote)S.notes[ds]=fullNote;
     S.history.push({d:ds,type:'ext_'+EXTKIND,rpe,frac:1,xp,km,dur});
     S.history=S.history.slice(-100);
-    o.remove();toast(`${label} GEREGISTREERD${extra} — +${xp} XP`);
+    o.remove();toast(`${T.lab} GEREGISTREERD${extra} — +${xp} XP / +${cn} CR`);
     checkBadges();
     render('mon');
   };

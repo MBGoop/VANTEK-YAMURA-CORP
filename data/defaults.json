@@ -43,7 +43,7 @@
  "notes": {},
  "badges": [],
  "history": [],
- "schemaVersion": 6,
+ "schemaVersion": 7,
  "hr": {
   "maxHR": 180,
   "restLog": [],
@@ -58,5 +58,8 @@
  "lastReviewReward": null,
  "checkinSnoozed": null,
  "lastLogAt": 0,
- "theme": "tama"
+ "theme": "tama",
+ "ledger": [],
+ "decayCharged": 0,
+ "decayPot": 0
 }

@@ -25,7 +25,20 @@ function palFor(variant){
   const th=(S&&S.theme)||'tama';
   return (THEME_SCENE[th]&&THEME_SCENE[th][variant])||PALETTES[variant];
 }
-function pal(){return palFor(S?S.creature.variant:0)}
+function pal(){
+  const P=palFor(S?S.creature.variant:0);
+  /* Verwaarloosd = zichtbaar doffer. Emotionele feedback doet in de
+     praktijk meer werk dan het XP-verlies zelf. */
+  if(S&&typeof mood==='function'&&mood()==='neglect') return P.map(dim);
+  return P;
+}
+function dim(hex){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  const grijs=(r*0.3+g*0.59+b*0.11);
+  r=Math.round(r*0.55+grijs*0.3);g=Math.round(g*0.55+grijs*0.3);b=Math.round(b*0.55+grijs*0.3);
+  return '#'+[r,g,b].map(x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,'0')).join('');
+}
 function drawSprite(grid,ox,oy,P,blink){
   grid.forEach((row,y)=>{[...row].forEach((ch,x)=>{
     if(ch==='.')return;
@@ -69,6 +82,8 @@ function drawItems(ox,oy,w,P,eq){
 function mood(){
   if(!S) return 'ok';
   if(S.lastLogAt && Date.now()-S.lastLogAt<60000) return 'happy';
+  /* aftakeling: zichtbaar verwaarloosd na de genadeperiode */
+  if(typeof daysInactive==='function' && daysInactive()>DECAY_GRACE) return 'neglect';
   if(typeof raceCountdown==='function'){
     const d=raceCountdown();
     if(d!==null && d>=0 && d<=10) return 'focus';
@@ -150,11 +165,12 @@ function drawScene(){
   const grid=SPRITES[st-1];
   const gw=grid[0].length, gh=grid.length;
   const md=mood();
-  const bobAmp=md==='happy'?5:md==='sleepy'?1.5:3;
-  const bobSpd=md==='happy'?14:md==='sleepy'?40:24;
-  const bob=motionOff()?0:Math.round(Math.sin(t/bobSpd)*bobAmp);
+  const bobAmp=md==='happy'?5:md==='sleepy'?1.5:md==='neglect'?1:3;
+  const bobSpd=md==='happy'?14:md==='sleepy'?40:md==='neglect'?50:24;
+  const zak=md==='neglect'?4:0;                 /* hangt lager: energie weg */
+  const bob=(motionOff()?0:Math.round(Math.sin(t/bobSpd)*bobAmp))+zak;
   const gap=S&&S.lastActive?Math.floor((new Date(todayStr())-new Date(S.lastActive))/DAY):0;
-  const blink=gap>=3||md==='sleepy'&&(t>>3)%8<3||((t>>3)%28===0);
+  const blink=gap>=3||md==='neglect'||md==='sleepy'&&(t>>3)%8<3||((t>>3)%28===0);
   const ox=(W-gw)/2|0, oy=H-26-gh+bob;
   /* anti-grav gloed onder wezen */
   SC.ctx.globalAlpha=.5;

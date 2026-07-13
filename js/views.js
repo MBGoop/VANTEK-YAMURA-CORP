@@ -25,13 +25,22 @@ function vBench(el){
    </div>`;
   $('#bench-go').onclick=()=>{
     actx();
-    startEngine('fortime',{cap:0},{label:'BENCHMARK',onFinish:(sec)=>{
+    startEngine('fortime',{cap:0},{label:'BENCHMARK',onFinish:(sec,rounds,aborted)=>{
+      S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();
+      if(aborted){
+        /* Afgebroken benchmark is GEEN record: het circuit is niet af, dus
+           de tijd is niet vergelijkbaar. Wel eerlijke XP voor de inspanning. */
+        const xp=Math.max(5,Math.round(sec/60)*3);
+        S.stats.grit+=1;
+        gainXP(xp,0,'benchmark-afgebroken','ses:'+todayStr(),{grit:1});
+        toast(`BENCHMARK AFGEBROKEN — ${fmtTime(sec)} · +${xp} XP, niet als record opgeslagen`);
+        render('trn');return;
+      }
       const oldBest=S.hyroxPRs.length?Math.min(...S.hyroxPRs.map(p=>p.sec)):Infinity;
       S.hyroxPRs.push({date:todayStr(),sec});S.hyroxPRs=S.hyroxPRs.slice(-24);
-      S.lastActive=todayStr();bumpStreakIfNew();
       S.stats.grit+=4;S.stats.speed+=2;
       const pr=sec<oldBest;
-      gainXP(pr?60:35,pr?25:12);
+      gainXP(pr?60:35,pr?25:12,'benchmark','ses:'+todayStr(),{grit:4,speed:2});
       if(pr||!isFinite(oldBest)) celebratePR(sec, oldBest);
       else toast(`BENCHMARK: ${fmtTime(sec)} — opgeslagen`);
       render('trn');
@@ -137,10 +146,24 @@ function daySheet(ds){
   const lg=$('#ds-log');  if(lg)  lg.onclick=()=>{o.remove(); logSheet(sessionForDate(ds), ds)};
   const ext=$('#ds-ext'); if(ext) ext.onclick=()=>{o.remove(); externalLogSheet(ds)};
   const un=$('#ds-unlog');if(un)  un.onclick=()=>{
-    confirmSheet('Log van deze dag wissen? De sessie verdwijnt uit je historiek.',()=>{
+    const boek=(S.ledger||[]).filter(e=>e.ref==='ses:'+ds);
+    const tXP=boek.reduce((a,e)=>a+e.xp,0), tCR=boek.reduce((a,e)=>a+e.cr,0);
+    const uitleg=boek.length
+      ? `Dit haalt ook <b>${tXP} XP</b> en <b>${tCR} CR</b> terug van ${S.creature.name}, plus de stats van die sessie.`
+      : `Deze sessie stamt van vóór de XP-boekhouding, dus de punten kunnen niet exact worden teruggedraaid. De log verdwijnt wel.`;
+    confirmSheet(`Log van ${ds} wissen? ${uitleg}`,()=>{
+      revokeRef('ses:'+ds);                 /* exact terugboeken */
       delete S.done[ds];
+      delete S.notes[ds];
       S.history=S.history.filter(h=>h.d!==ds);
-      save();o.remove();render('trn');
+      /* gewichten van die dag ook opruimen, anders blijft een foute 40kg staan */
+      Object.keys(S.exLog||{}).forEach(k=>{
+        S.exLog[k]=S.exLog[k].filter(e=>e.d!==ds);
+        if(!S.exLog[k].length)delete S.exLog[k];
+      });
+      save();o.remove();
+      toast(boek.length?`LOG GEWIST — -${tXP} XP / -${tCR} CR`:'LOG GEWIST');
+      render('trn');
     },{danger:true,yes:'JA, WISSEN'});
   };
 }
@@ -336,10 +359,12 @@ function vBib(el){
          <div class="rp">
            <div style="margin-top:4px"><b>Zwaarder:</b> ${e.prog}</div>
          </div>
+         <button class="btn small ghost mt1" data-vid="${k}">${e.video?'BEKIJK VIDEO':'TOON VOORBEELD'} &#9654;</button>
        </div>`}).join('')}
      </div>
    </div>`;
   el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{BIBCAT=c.dataset.c;render('bib')});
+  el.querySelectorAll('[data-vid]').forEach(b=>b.onclick=()=>openVideo(b.dataset.vid));
   const ba=$('#bib-add'); if(ba) ba.onclick=customExSheet;
 }
 
@@ -464,8 +489,15 @@ function vCorp(el){
        ${[['tama','TAMA'],['dmg','GAME BOY'],['bw','ZW/W'],['hyrox','HYROX']].map(([val,lab])=>`<button class="chip ${(S.theme||'tama')===val?'sel':''}" data-v="${val}">${lab}</button>`).join('')}
      </div>
      <p class="tiny dim" style="margin-top:6px">Algemene fitness-suggesties, geen medisch advies. Bij pijn of klachten: arts of kinesist. Alle data lokaal (localStorage), geen account, geen cloud.</p>
-     <button class="btn ghost" style="margin-top:12px" id="export">DATA EXPORTEREN (BACK-UP)</button>
+     <div class="lbl" style="margin-top:16px">LOGBOEK &amp; DATA</div>
+     <button class="btn ghost" style="margin-top:8px" id="exp-txt">LOGBOEK EXPORTEREN (LEESBAAR)</button>
+     <button class="btn ghost" style="margin-top:8px" id="exp-csv">LOGBOEK EXPORTEREN (EXCEL/CSV)</button>
+     <button class="btn ghost" style="margin-top:8px" id="export">BACK-UP (JSON, VOOR HERSTEL)</button>
      <button class="btn ghost" style="margin-top:8px" id="import">BACK-UP IMPORTEREN</button>
+     <div class="lbl" style="margin-top:16px">CORRIGEREN</div>
+     <button class="btn ghost" style="margin-top:8px" id="ledger">XP-BOEKHOUDING BEKIJKEN</button>
+     <p class="tiny dim" style="margin-top:6px">Foute ingave? Wis de log via AGENDA &gt; tik op de dag &gt; LOG WISSEN. XP, credits en stats worden exact teruggeboekt.</p>
+     <button class="btn danger" style="margin-top:12px" id="resetcreature">SPECIMEN RESETTEN NAAR 0</button>
      <button class="btn ghost" style="margin-top:8px;color:var(--g3b)" id="reset">VOLLEDIGE RESET</button>
    </div>`;
   ITEMS.forEach((it,i)=>drawPreview($('#si'+i),S.creature.variant,stage(),[it.id]));
@@ -511,6 +543,24 @@ function vCorp(el){
     else toast('Gebruik het browsermenu > Toevoegen aan startscherm');
   };
   $('#export').onclick=exportBackup;   /* -> storage.js */
+  $('#exp-txt').onclick=exportLogTXT;
+  $('#exp-csv').onclick=exportLogCSV;
+  $('#ledger').onclick=ledgerSheet;
+  /* Wezen opnieuw beginnen ZONDER je trainingshistoriek te verliezen.
+     Bewust twee aparte acties: je werk weggooien en je game-progressie
+     resetten zijn twee heel verschillende beslissingen. */
+  $('#resetcreature').onclick=()=>{
+    confirmSheet(
+      `${S.creature.name} begint opnieuw vanaf level 1: XP, fase, credits, badges, uitrusting en stats gaan naar nul.<br><br>`+
+      `<b>Blijft volledig behouden:</b> al je trainingslogs, agenda, plan, gewichten, benchmark-records, HR-data en notities.`,
+      ()=>{
+        S.xp=0;S.coins=0;S.badges=[];S.owned=[];S.equipped=[];
+        S.stats={power:0,speed:0,grit:0,mobility:0};
+        S.ledger=[];S.decayCharged=0;S.decayPot=0;
+        S.streak=0;S._streakDay=null;
+        save();toast(`${S.creature.name} HERBOREN — LEVEL 1`);render('mon');
+      },{danger:true,title:'SPECIMEN RESETTEN',yes:'JA, OPNIEUW BEGINNEN'});
+  };
   el.querySelectorAll('#fs-pick .chip').forEach(c=>c.onclick=()=>{S.fontScale=parseFloat(c.dataset.v);save();applyVisuals();render('crp')});
   el.querySelectorAll('#comfort-pick .chip').forEach(c=>c.onclick=()=>{S.comfort=c.dataset.v==='1';save();applyVisuals();render('crp')});
   $('#logboek').onclick=logbookSheet;
@@ -594,4 +644,36 @@ function bindTest(){
   b('#t-c',()=>{S.coins+=50;save();render()});
   b('#t-day',()=>{S.dayOffset++;S.lastCheckin=null;save();render()});
   b('#t-low',()=>{S.recovery=25;save();render()});
+}
+
+
+/* =====================================================
+   XP-BOEKHOUDING — transparantie is de prijs van verval.
+   Wie punten kan verliezen, moet exact kunnen zien waarom.
+===================================================== */
+const LEDGER_LABEL={sessie:'Sessie gelogd',extern:'Externe activiteit',quest:'Side-quest',
+  weekquest:'Weekquest',review:'Weekrapport',benchmark:'Benchmark',
+  'benchmark-afgebroken':'Benchmark afgebroken',timer:'Timer',
+  'timer-afgebroken':'Timer afgebroken',verval:'Verval (inactief)',
+  comeback:'Comeback-bonus',overig:'Overig'};
+function ledgerSheet(){
+  const L=(S.ledger||[]).slice().reverse().slice(0,40);
+  const totXP=(S.ledger||[]).reduce((a,e)=>a+e.xp,0);
+  sheet(`<h2 style="font-size:10px">XP-BOEKHOUDING</h2>
+    <p class="tiny dim">Elke mutatie van ${S.creature.name}, nieuwste eerst. Laatste 40 boekingen.</p>
+    <div class="block mt2"><h4>HUIDIG</h4>
+      <p>${Math.round(S.xp)} XP · level ${level()} · fase ${stage()} · ${S.coins} CR</p>
+      <p class="tiny dim" style="margin-top:4px">Geboekt in dit grootboek: ${totXP} XP${(S.ledger||[]).length>=400?' (ouder dan 400 boekingen wordt opgeruimd)':''}</p>
+    </div>
+    ${L.length?`<div class="ledger mt2">${L.map(e=>`
+      <div class="row">
+        <div style="flex:1">
+          <span class="body">${LEDGER_LABEL[e.src]||e.src}</span>
+          <div class="tiny dim">${e.d}</div>
+        </div>
+        <span class="body ${e.xp<0?'neg':'pos'}">${e.xp>0?'+':''}${e.xp} XP</span>
+        ${e.cr?`<span class="tiny dim" style="margin-left:8px">+${e.cr} CR</span>`:''}
+      </div>`).join('')}</div>`
+     :'<p class="tiny dim mt2">Nog geen boekingen. Log een sessie en ze verschijnen hier.</p>'}
+    <p class="tiny dim mt2">Een foute sessie corrigeren doe je in AGENDA: tik de dag aan en kies LOG WISSEN. Alles van die dag wordt exact teruggeboekt.</p>`);
 }

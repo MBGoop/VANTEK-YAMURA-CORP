@@ -110,7 +110,8 @@ function startEngine(fmt,cfg,opts={}){
     ${fmt==='amrap'||fmt==='fortime'?`<button class="btn ghost" style="margin-top:6px" id="eng-count">RONDE +1 <span id="eng-rc">(0)</span></button>`:''}
     <div class="row" style="margin-top:12px">
       <button class="btn ghost" id="eng-pause">PAUZE</button>
-      <button class="btn" id="eng-stop">${fmt==='fortime'?'FINISH':'STOP'}</button>
+      <button class="btn" id="eng-stop">${fmt==='fortime'?'FINISH':'KLAAR'}</button>
+      <button class="btn ghost mt1" id="eng-abort">AFBREKEN</button>
     </div>
   </div>`;
   document.body.appendChild(ov);
@@ -123,6 +124,10 @@ function startEngine(fmt,cfg,opts={}){
     else{ENG.start+=Date.now()-ENG.pauseAt;e.target.textContent='PAUZE'}
   };
   ov.querySelector('#eng-stop').onclick=()=>finishEngine(rc);
+  ov.querySelector('#eng-abort').onclick=()=>{
+    confirmSheet('Sessie afbreken? Je krijgt XP naar wat je effectief deed — geen credits en geen record.',
+      ()=>abortEngine(rc), {danger:true, title:'AFBREKEN', yes:'JA, AFBREKEN'});
+  };
   cueCountdown();
   tickEngine();
 }
@@ -184,12 +189,34 @@ function finishEngine(rounds){
   const ov=$('#engineOverlay');if(ov)ov.remove();
   const sec=Math.round(ENG.elapsed);
   /* benchmark? aparte opslag + PR */
-  if(ENG.onFinish){ENG.onFinish(sec,rounds);return}
+  if(ENG.onFinish){ENG.onFinish(sec,rounds,false);return}
   /* gewone timer: kleine beloning, telt als activiteit */
   S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();
   S.stats.grit+=2;
-  gainXP(15,6);
+  gainXP(15,6,'timer','ses:'+todayStr(),{grit:2});
   toast(`ENGINE KLAAR — ${fmtTime(sec)}${rounds?` / ${rounds} rondes`:''} · +15 XP`);
+  render('trn');
+}
+/* AFBREKEN — eerlijk afrekenen.
+   Een game die beloont voor iets dat je niet deed, verliest binnen twee
+   weken alle betekenis: dan is de XP-teller een leugenaar. Dus: XP pro
+   rata naar effectief gedane tijd, GEEN credits, GEEN record. */
+function abortEngine(rounds){
+  stopEngine();
+  const ov=$('#engineOverlay');if(ov)ov.remove();
+  const sec=Math.round(ENG.elapsed);
+  const doel=ENG.total||0;
+  const deel=doel>0?Math.min(1,sec/doel):0.5;
+  if(ENG.onFinish){ENG.onFinish(sec,rounds,true);return}   /* benchmark: geen PR */
+  if(sec<60){
+    toast('AFGEBROKEN — te kort om te tellen, geen XP');
+    render('trn');return;
+  }
+  S.lastActive=todayStr();S.lastLogAt=Date.now();bumpStreakIfNew();
+  S.stats.grit+=1;
+  const xp=Math.max(3,Math.round(15*deel));
+  gainXP(xp,0,'timer-afgebroken','ses:'+todayStr(),{grit:1});
+  toast(`AFGEBROKEN — ${fmtTime(sec)} (${Math.round(deel*100)}%) · +${xp} XP, geen credits`);
   render('trn');
 }
 

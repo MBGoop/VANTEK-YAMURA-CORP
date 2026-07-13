@@ -41,7 +41,7 @@ function rowsToEX(rows){
     /* zone mag leeg zijn (oefening zonder pijnzone) -> moet null blijven,
        niet '' — de engine test op null bij het filteren van alternatieven. */
     const e={n:r.n,cat:r.cat,need:r.need,zone:r.zone||null,stat:r.stat,
-             desc:r.desc,reg:r.reg,prog:r.prog};
+             desc:r.desc,reg:r.reg,prog:r.prog,video:r.video||null};
     if(r.wt)  e.wt=r.wt;
     if(r.alt) e.alt=r.alt.split(',').map(x=>x.trim()).filter(Boolean);
     EX[r.id]=e;

@@ -5,7 +5,7 @@
 
 const STORE_KEY  = 'grit2';
 const BACKUP_KEY = 'grit2-backup';
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 /* Zet oude opslag om naar het huidige schema. Draait 1x na een update. */
 function migrate(){
@@ -34,6 +34,13 @@ function migrate(){
      instelling 'verminder beweging' zette de Tamagotchi onzichtbaar stil.
      Eenmalige migratie; AUTO blijft beschikbaar als bewuste keuze. */
   if(S.theme === undefined) S.theme = 'tama';
+  /* v7: XP-grootboek + verval. Bestaande gebruikers starten met een leeg
+     grootboek: hun oude XP is niet geboekt, dus die kan niet exact worden
+     teruggedraaid. Dat melden we eerlijk in de wis-bevestiging i.p.v. te
+     doen alsof het exact is. */
+  if(!S.ledger) S.ledger = [];
+  if(S.decayCharged === undefined) S.decayCharged = 0;
+  if(S.decayPot === undefined) S.decayPot = 0;
   if(S.schemaVersion < 6 && S.anim === 'auto') S.anim = 'aan';
   /* v6: blessure/alternatief-systeem verwijderd — velden neutraliseren */
   if(S.profile){ S.profile.pijnzones = []; S.profile.parqFlag = false; }
@@ -92,4 +99,90 @@ function restoreShadow(){
     migrate(); save();
     return true;
   }catch(e){ return false; }
+}
+
+/* =====================================================
+   LEESBARE EXPORT (v6)
+   Back-up (JSON) blijft bestaan voor herstel — die is voor de machine.
+   Dit hier is voor jou: wat deed ik, wanneer, met welk gewicht, en
+   hoe verhield zich dat tot mijn planning.
+===================================================== */
+function download(name, text, mime){
+  const blob=new Blob([text],{type:mime||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  URL.revokeObjectURL(a.href);
+}
+function sesLabelFor(h){
+  if(!h) return '';
+  if(h.type&&h.type.startsWith('ext_')){
+    const k=h.type.slice(4);
+    return (typeof EXT_TYPES!=='undefined'&&EXT_TYPES[k]?EXT_TYPES[k].lab:'EXTERN');
+  }
+  return typeof dayLabel==='function'?dayLabel(h.type):(h.type||'SESSIE');
+}
+/* Alle dagen tussen eerste plan-dag en vandaag, met gepland + gedaan. */
+function buildLogRows(){
+  const rows=[];
+  const start=S.planStart||Object.keys(S.done).sort()[0]||todayStr();
+  const d0=new Date(start), d1=new Date(todayStr());
+  for(let d=new Date(d0); d<=d1; d.setDate(d.getDate()+1)){
+    const ds=d.toISOString().slice(0,10);
+    const ses=typeof sessionForDate==='function'?sessionForDate(ds):null;
+    const gepland=ses?(typeof dayLabel==='function'?dayLabel(ses.type):ses.type):'rustdag';
+    const h=(S.history||[]).filter(x=>x.d===ds);
+    const gedaan=S.done[ds]?(h.length?h.map(sesLabelFor).join(' + '):'gelogd'):'';
+    const rpe=h.length?h.map(x=>x.rpe).join('/'):'';
+    const xp=h.reduce((a,x)=>a+(x.xp||0),0)||'';
+    const km=h.map(x=>x.km).filter(Boolean).join('/');
+    const dur=h.map(x=>x.dur).filter(Boolean).join('/');
+    /* gewichten die op deze dag gelogd zijn */
+    const gew=Object.entries(S.exLog||{}).flatMap(([k,arr])=>
+      arr.filter(e=>e.d===ds).map(e=>`${(typeof EX!=='undefined'&&EX[k]?EX[k].n:k)} ${e.w}kg${e.r?` x${e.r}`:''}`)).join(', ');
+    const plWk=ses&&ses.plan?`wk${ses.plan.week}/20 ${ses.plan.block}`:'';
+    rows.push({ds,gepland,gedaan,status:S.done[ds]?'GEDAAN':(ses?'GEMIST':'-'),
+               rpe,xp,km,dur,gew,notitie:(S.notes[ds]||'').replace(/[;\n\r]/g,' '),plan:plWk});
+  }
+  return rows;
+}
+/* CSV voor Excel — puntkomma's, want Nederlandstalige Excel verwacht die. */
+function exportLogCSV(){
+  const rows=buildLogRows();
+  const head=['datum','week/blok','gepland','status','gedaan','rpe','duur_min','afstand_km','gewichten','xp','notitie'];
+  const lines=[head.join(';')].concat(rows.map(r=>
+    [r.ds,r.plan,r.gepland,r.status,r.gedaan,r.rpe,r.dur,r.km,r.gew,r.xp,r.notitie]
+      .map(x=>String(x==null?'':x)).join(';')));
+  download(`grit-logboek-${todayStr()}.csv`,'\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8');
+  if(typeof toast==='function')toast('LOGBOEK GEDOWNLOAD (CSV)');
+}
+/* Leesbaar tekstrapport — open in Kladblok, print, of stuur door. */
+function exportLogTXT(){
+  const rows=buildLogRows();
+  const gedaan=rows.filter(r=>r.status==='GEDAAN').length;
+  const gemist=rows.filter(r=>r.status==='GEMIST').length;
+  const L=[];
+  L.push('GRIT — TRAININGSLOGBOEK');
+  L.push('VANTEK-YAMURA CORP — BUILDING STRONGER BODIES(TM)');
+  L.push('='.repeat(60));
+  L.push(`Specimen : ${S.creature.name} (level ${level()}, fase ${stage()}, ${Math.round(S.xp)} XP)`);
+  L.push(`Periode  : ${rows.length?rows[0].ds:'-'} t/m ${todayStr()}`);
+  L.push(`Sessies  : ${gedaan} gedaan, ${gemist} gemist  ·  streak ${S.streak}`);
+  if(S.race&&S.race.date)L.push(`Wedstrijd: ${S.race.name} op ${S.race.date}`);
+  if(S.hyroxPRs&&S.hyroxPRs.length){
+    const best=S.hyroxPRs.reduce((a,b)=>a.sec<b.sec?a:b);
+    L.push(`Benchmark: beste ${typeof fmtTime==='function'?fmtTime(best.sec):best.sec+'s'} (${best.date})`);
+  }
+  L.push('='.repeat(60));L.push('');
+  rows.forEach(r=>{
+    if(r.status==='-'&&!r.gedaan)return;                    /* lege rustdagen overslaan */
+    L.push(`${r.ds}  [${r.status}]${r.plan?'  ('+r.plan+')':''}`);
+    L.push(`   gepland : ${r.gepland}`);
+    if(r.gedaan) L.push(`   gedaan  : ${r.gedaan}${r.dur?` — ${r.dur} min`:''}${r.km?` — ${r.km} km`:''}${r.rpe?` — RPE ${r.rpe}`:''}`);
+    if(r.gew)    L.push(`   gewicht : ${r.gew}`);
+    if(r.notitie)L.push(`   notitie : ${r.notitie}`);
+    if(r.xp)     L.push(`   beloning: +${r.xp} XP`);
+    L.push('');
+  });
+  download(`grit-logboek-${todayStr()}.txt`, L.join('\r\n'));
+  if(typeof toast==='function')toast('LOGBOEK GEDOWNLOAD (TXT)');
 }

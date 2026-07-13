@@ -306,3 +306,19 @@ nav button{min-width:0;letter-spacing:0}
 .exbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
 .missie+.missie{border-top:2px solid var(--g2);margin-top:10px;padding-top:10px}
 #theme-pick .chip{min-width:64px}
+
+/* v6 — laatst gebruikte gewicht in de oefeningsregel */
+.ex .dose .wt{color:var(--acc);font-family:var(--body)}
+/* Grootboek-regels in CORP */
+.ledger .row{border-bottom:2px solid var(--g2);padding:6px 0}
+.ledger .neg{color:var(--danger)}
+.ledger .pos{color:var(--g3b)}
+
+/* v6 — oefening tikbaar voor video-uitleg */
+.ex .exmain .exvid{background:none;border:0;padding:0;text-align:left;color:inherit;
+  font-family:inherit;font-size:inherit;display:inline-flex;align-items:center;gap:6px;min-height:32px}
+.ex .exmain .exvid .vico{color:var(--acc);font-size:9px;opacity:.75}
+.bibitem .btn.small{width:auto}
+
+/* v6 — verval-indicator in de HUD */
+#hud .warn2{color:var(--danger)}

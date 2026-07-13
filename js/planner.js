@@ -231,6 +231,9 @@ function updateStreak(){
 /* Freeze nog beschikbaar deze week? Zichtbaar vangnet i.p.v. verrassing. */
 function freezeAvailable(){ return S.freezeWeek!==weekKey(); }
 function bumpStreakIfNew(){
+  /* Elke echte activiteit stopt het verval en betaalt de comeback uit.
+     Eén plek, zodat geen enkel logpad dit kan vergeten. */
+  if(typeof comebackBonus==='function') comebackBonus();
   if(S._streakDay!==todayStr()){S.streak++;S._streakDay=todayStr()}
   save();
 }

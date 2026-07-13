@@ -175,7 +175,7 @@ function render(tab){
   if(ENG.raf&&!(TAB==='trn'&&(TRNSUB==='timer'||TRNSUB==='bench'))){stopEngine();}
   stopRest();
   if(TAB!=='mon')cancelAnimationFrame(SC.raf);
-  updateStreak();save();
+  updateStreak();applyDecay();save();
   const cons=consistency();
   APP.innerHTML=`
    <div class="corp">VANTEK-YAMURA CORP — BUILDING STRONGER BODIES(TM)</div>
@@ -185,6 +185,7 @@ function render(tab){
      <div class="stat">CS <b>${cons}%</b></div>
      <div class="spacer"></div>
      <div class="stat">STRK <b>${S.streak}</b>${freezeAvailable()?'<span class="frz">+FRZ</span>':''}</div>
+     ${daysInactive()>DECAY_GRACE?`<div class="stat warn2">-${DECAY_PER_DAY}/D</div>`:''}
      <div class="stat">CR <b>${S.coins}</b></div>
    </div>
    <div id="view" style="padding-top:10px"></div>
@@ -214,7 +215,8 @@ function hudSheet(){
     <div class="block"><h4>RC — RECOVERY</h4><p>Hersteld van je vorige belasting? Wordt ook bijgestuurd door je rusthartslag (VITALS).</p></div>
     <div class="block"><h4>CS — CONSISTENTIE</h4><p>Percentage van je geplande sessies in de laatste 14 dagen dat je effectief deed. De belangrijkste meter van allemaal.</p></div>
     <div class="block"><h4>STRK — STREAK</h4><p>Actieve dagen op rij. Rustdagen tellen gewoon door. <b>+FRZ</b> = je vangnet staat klaar: mis je tot 5 dagen, dan vangt de freeze dat 1x per week op.</p></div>
-    <div class="block"><h4>CR — CREDITS</h4><p>Verdien je met trainen, uitgeven in het CORP-depot.</p></div>`);
+    <div class="block"><h4>CR — CREDITS</h4><p>Verdien je met trainen, uitgeven in het CORP-depot.</p></div>
+    <div class="block"><h4>-5/D — VERVAL</h4><p>Na ${DECAY_GRACE} rustdagen begint ${S.creature.name} af te takelen: -${DECAY_PER_DAY} XP per gemiste dag. Je zakt <b>nooit</b> een level of fase — de vloer is de drempel van je huidige level. Eén sessie stopt het verval en geeft de helft van het verlies terug.</p></div>`);
 }
 /* Weekstrip bovenaan: 7 dagen in één oogopslag, tikbaar voor detail. */
 function weekStrip(){
@@ -305,7 +307,7 @@ function vMonitor(el){
      ${ses?(done?`<p class="tiny" style="margin-top:8px">[OK] ${dayLabel(ses.type)} voltooid. Data verwerkt.</p>`
        :`<p class="tiny" style="margin-top:8px">${dayLabel(ses.type)} — ${S.dur} MIN — WEEK ${planWeek()}${planWeek()===4?' [DELOAD]':''}</p><button class="btn" style="margin-top:10px" id="gotrain">START PROTOCOL</button>`)
        :`<p class="tiny" style="margin-top:8px">RUSTDAG. Streak loopt door.</p>`}
-     <button class="btn ghost" style="margin-top:8px" id="extlog">+ EXTERNE SESSIE REGISTREREN</button>
+     <button class="btn ghost" style="margin-top:8px" id="extlog">+ ACTIVITEIT TOEVOEGEN</button>
    </div>
    <div class="panel inv">
      <h2>MISSIES</h2>
@@ -379,7 +381,8 @@ function vToday(el){
   const ses=sessionForDate(todayStr());
   const mode=dayMode();
   let body='';
-  if(!ses){body=`<div class="panel center"><p class="tiny">RUSTDAG GEPROGRAMMEERD.</p><p class="tiny dim" style="margin-top:6px">Zin in iets kleins? Side-quest op de monitor telt mee.</p></div>`}
+  if(!ses){body=`<div class="panel center"><p class="tiny">RUSTDAG GEPROGRAMMEERD.</p><p class="tiny dim" style="margin-top:6px">Zin in iets kleins? Side-quest op de monitor telt mee.</p>
+    <button class="btn ghost mt2" id="quickadd">+ ACTIVITEIT TOEVOEGEN</button></div>`}
   else{
     const w=sessionPlan(todayStr(), mode==='light');
     const tap=taperFactor(todayStr())<1;
@@ -408,6 +411,7 @@ function vToday(el){
         <button class="btn small ghost" id="opentimer">TIMER</button>
         <button class="btn small ghost" id="editday">AANPASSEN</button>
       </div>
+      <button class="btn ghost mt1" id="quickadd">+ ACTIVITEIT TOEVOEGEN</button>
       ${note?`<div class="block" style="margin-top:10px"><h4>JOUW NOTITIE</h4><p>${note}</p></div>`:''}
       ${S.done[todayStr()]?`<p class="center tiny" style="margin-top:12px">[OK] vandaag gelogd</p>`:`<button class="btn" style="margin-top:12px" id="logbtn">PROTOCOL LOGGEN</button>`}
     </div>`;
@@ -419,11 +423,23 @@ function vToday(el){
   if(r9)r9.onclick=()=>startRest(90);
   const ed=$('#editday');if(ed)ed.onclick=()=>editSessionSheet(todayStr());
   const ot=$('#opentimer');if(ot)ot.onclick=()=>{TRNSUB='timer';render('trn')};
+  const qa=$('#quickadd');if(qa)qa.onclick=()=>externalLogSheet();
+  el.querySelectorAll('[data-vid]').forEach(b=>b.onclick=()=>openVideo(b.dataset.vid));
   bindTest();
 }
 /* EEN bron van waarheid voor de naam van een oefening in een sessie.
    Was fout: renderBlock toonde de regressie-TEKST als naam, terwijl de
    bewerk-sheet de originele oefening toonde. Twee namen voor hetzelfde ding. */
+/* Laatst gelogde gewicht voor een oefening (of het gewicht dat voor deze
+   dag is ingesteld via AANPASSEN). */
+function lastWeight(key, ds){
+  if(ds && S.overrides[ds] && S.overrides[ds].ex && S.overrides[ds].ex.list){
+    const ov=S.overrides[ds].ex.list.find(x=>x.key===key);
+    if(ov && ov.kg) return ov.kg;
+  }
+  const l=(S.exLog&&S.exLog[key]&&S.exLog[key].length)?S.exLog[key][S.exLog[key].length-1]:null;
+  return l?l.w:null;
+}
 function itemName(a){
   const e = EX[a.key];
   return e ? e.n : '?';
@@ -458,9 +474,13 @@ function renderBlock(title,items,withHints=false){
     const [a,dose]=it;
     if(a==='march'||a==='ROND'){const e=a==='ROND'?null:EX.march;return `<div class="ex"><span class="nm">${e?e.n:''}</span><div class="spacer"></div><span class="dose">${dose}</span></div>`}
     const nm=itemName(a);
+    /* Laatst gebruikte gewicht tonen: dit is wat progressive overload
+       stuurt. Stond wel in de data, maar was onzichtbaar buiten de
+       log-sheet — daardoor voelde het alsof het 'verdween'. */
+    const lw=lastWeight(a.key);
     return `<div class="ex">
-      <div class="exmain"><span class="nm">${nm}</span>${withHints?exHint(a.key,a):''}</div>
-      <span class="dose">${dose}</span>
+      <div class="exmain"><button class="nm exvid" data-vid="${a.key}" title="Toon uitvoering">${nm} <span class="vico">&#9654;</span></button>${withHints?exHint(a.key,a):''}</div>
+      <span class="dose">${dose}${lw?` <b class="wt">@${lw}kg</b>`:''}</span>
     </div>`;
   }).join('')}</div>`;
 }
